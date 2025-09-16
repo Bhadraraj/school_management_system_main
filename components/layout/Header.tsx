@@ -16,6 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Bell, MessageSquare, Menu, LogOut, User, Settings, Sun, Moon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import NotificationCenter from './NotificationCenter';
 
 const Header = memo(function Header() {
   const { user, logout } = useAuthStore();
@@ -103,14 +104,7 @@ const Header = memo(function Header() {
           </Button>
           
           {/* Notifications */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="relative text-foreground hover:bg-accent p-2"
-          >
-            <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full"></span>
-          </Button>
+          <NotificationCenter />
           
           {/* Messages - Hide on small screens */}
           <Button 

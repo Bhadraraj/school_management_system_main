@@ -1,6 +1,8 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useEffect } from 'react';
+import { attendanceApi, type AttendanceInsert } from '@/lib/api/attendance';
+import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +17,6 @@ import { z } from 'zod';
 const attendanceSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   class: z.string().min(1, 'Class is required'),
-  subject: z.string().min(1, 'Subject is required'),
-  students: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    status: z.enum(['present', 'absent', 'late']),
-  })),
 });
 
 type AttendanceFormData = z.infer<typeof attendanceSchema>;
@@ -32,6 +28,7 @@ interface AttendanceModalProps {
   attendance?: any;
   classes?: any[];
   students?: any[];
+  onSaved?: () => void;
 }
 
 const AttendanceModal = memo(function AttendanceModal({ 
@@ -40,14 +37,17 @@ const AttendanceModal = memo(function AttendanceModal({
   mode, 
   attendance, 
   classes = [],
-  students = [] 
+  students = [],
+  onSaved
 }: AttendanceModalProps) {
+  const { toast } = useToast();
   const [studentAttendance, setStudentAttendance] = useState(
     students.slice(0, 10).map(student => ({
       ...student,
       status: 'present' as 'present' | 'absent' | 'late'
     }))
   );
+  const [selectedClass, setSelectedClass] = useState('');
 
   // Update student attendance when students prop changes
   useEffect(() => {
@@ -65,11 +65,26 @@ const AttendanceModal = memo(function AttendanceModal({
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: attendance || {},
   });
 
+  const watchedClass = watch('class');
+
+  // Filter students by selected class
+  useEffect(() => {
+    if (watchedClass) {
+      const classStudents = students.filter(student => student.class_id === watchedClass);
+      setStudentAttendance(
+        classStudents.map(student => ({
+          ...student,
+          status: 'present' as 'present' | 'absent' | 'late'
+        }))
+      );
+    }
+  }, [watchedClass, students]);
   const updateStudentStatus = (studentId: string, status: 'present' | 'absent' | 'late') => {
     setStudentAttendance(prev => 
       prev.map(student => 
@@ -90,15 +105,36 @@ const AttendanceModal = memo(function AttendanceModal({
     );
   };
 
-  const onSubmit = useCallback((data: AttendanceFormData) => {
-    const formData = {
-      ...data,
-      students: studentAttendance
-    };
-    console.log('Attendance form submitted:', formData);
-    reset();
-    onOpenChange(false);
-  }, [reset, onOpenChange, studentAttendance]);
+  const onSubmit = useCallback(async (data: AttendanceFormData) => {
+    try {
+      // Create attendance records for all students
+      const attendanceRecords: AttendanceInsert[] = studentAttendance.map(student => ({
+        student_id: student.id,
+        class_id: data.class,
+        date: data.date,
+        status: student.status as any,
+        marked_by: 'current-user-id', // This should be the current user's ID
+      }));
+
+      await attendanceApi.markAttendance(attendanceRecords);
+      
+      toast({
+        title: "Success",
+        description: "Attendance marked successfully",
+      });
+
+      reset();
+      onOpenChange(false);
+      onSaved?.();
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save attendance",
+        variant: "destructive",
+      });
+    }
+  }, [studentAttendance, reset, onOpenChange, onSaved, toast]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,26 +186,6 @@ const AttendanceModal = memo(function AttendanceModal({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Select onValueChange={(value) => setValue('subject', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.find(c => c.id === watch('class'))?.subjects ? (
-                    <SelectItem value={classes.find(c => c.id === watch('class'))?.subjects?.id}>
-                      {classes.find(c => c.id === watch('class'))?.subjects?.name}
-                    </SelectItem>
-                  ) : (
-                    <SelectItem value="" disabled>Select class first</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              {errors.subject && (
-                <p className="text-sm text-red-600">{errors.subject.message}</p>
-              )}
-            </div>
           </div>
 
           <div className="space-y-4">

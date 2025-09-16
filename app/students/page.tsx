@@ -5,6 +5,8 @@ import Layout from "@/components/layout/Layout";
 import StudentModal from "@/components/students/StudentModal";
 import { studentsApi, type Student } from "@/lib/api/students";
 import { classesApi } from "@/lib/api/classes";
+import { checkSubscriptionLimits } from "@/lib/utils/permissions";
+import SubscriptionLimitWarning from "@/components/common/SubscriptionLimitWarning";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,7 @@ const StudentsPage = memo(function StudentsPage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [subscriptionLimits, setSubscriptionLimits] = useState<any>(null);
 
   // Fetch students and classes
   useEffect(() => {
@@ -44,6 +47,10 @@ const StudentsPage = memo(function StudentsPage() {
         ]);
         setStudents(studentsData);
         setClasses(classesData);
+
+        // Check subscription limits
+        const limits = await checkSubscriptionLimits('school1-1111-1111-1111-111111111111', 'students');
+        setSubscriptionLimits(limits);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -59,10 +66,20 @@ const StudentsPage = memo(function StudentsPage() {
     fetchData();
   }, [toast]);
   const handleCreate = useCallback(() => {
+    // Check if can add more students
+    if (subscriptionLimits && !subscriptionLimits.canAdd) {
+      toast({
+        title: "Subscription Limit Reached",
+        description: "You've reached your student limit. Please upgrade your plan.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setModalMode("create");
     setSelectedStudent(null);
     setIsModalOpen(true);
-  }, []);
+  }, [subscriptionLimits, toast]);
 
   const handleEdit = useCallback((student: any) => {
     setModalMode("edit");
@@ -150,7 +167,11 @@ const StudentsPage = memo(function StudentsPage() {
       <Layout allowedRoles={["admin", "teacher"]}>
         <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
           {/* Header Section */}
-       
+          
+          <SubscriptionLimitWarning 
+            schoolId="school1-1111-1111-1111-111111111111"
+            resource="students"
+          />
 
           <Card className="w-full">
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-4 sm:pb-6">

@@ -1,12 +1,204 @@
 export interface Database {
   public: {
     Tables: {
+      schools: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          phone?: string;
+          address?: string;
+          website?: string;
+          logo_url?: string;
+          timezone: string;
+          currency: string;
+          academic_year_start?: string;
+          academic_year_end?: string;
+          status: 'active' | 'inactive' | 'suspended';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          phone?: string;
+          address?: string;
+          website?: string;
+          logo_url?: string;
+          timezone?: string;
+          currency?: string;
+          academic_year_start?: string;
+          academic_year_end?: string;
+          status?: 'active' | 'inactive' | 'suspended';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          phone?: string;
+          address?: string;
+          website?: string;
+          logo_url?: string;
+          timezone?: string;
+          currency?: string;
+          academic_year_start?: string;
+          academic_year_end?: string;
+          status?: 'active' | 'inactive' | 'suspended';
+          updated_at?: string;
+        };
+      };
+      school_subscriptions: {
+        Row: {
+          id: string;
+          school_id: string;
+          plan_type: 'basic' | 'standard' | 'premium';
+          status: 'active' | 'inactive' | 'expired';
+          max_students: number;
+          max_teachers: number;
+          max_classes: number;
+          features: any;
+          price_per_month: number;
+          starts_at: string;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          school_id: string;
+          plan_type: 'basic' | 'standard' | 'premium';
+          status?: 'active' | 'inactive' | 'expired';
+          max_students: number;
+          max_teachers: number;
+          max_classes: number;
+          features?: any;
+          price_per_month: number;
+          starts_at?: string;
+          expires_at: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          school_id?: string;
+          plan_type?: 'basic' | 'standard' | 'premium';
+          status?: 'active' | 'inactive' | 'expired';
+          max_students?: number;
+          max_teachers?: number;
+          max_classes?: number;
+          features?: any;
+          price_per_month?: number;
+          starts_at?: string;
+          expires_at?: string;
+          updated_at?: string;
+        };
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          message: string;
+          type: 'info' | 'warning' | 'success' | 'error';
+          read: boolean;
+          action_url?: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          message: string;
+          type?: 'info' | 'warning' | 'success' | 'error';
+          read?: boolean;
+          action_url?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          message?: string;
+          type?: 'info' | 'warning' | 'success' | 'error';
+          read?: boolean;
+          action_url?: string;
+        };
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          school_id?: string;
+          user_id?: string;
+          action: string;
+          table_name: string;
+          record_id?: string;
+          old_values?: any;
+          new_values?: any;
+          ip_address?: string;
+          user_agent?: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          school_id?: string;
+          user_id?: string;
+          action: string;
+          table_name: string;
+          record_id?: string;
+          old_values?: any;
+          new_values?: any;
+          ip_address?: string;
+          user_agent?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          school_id?: string;
+          user_id?: string;
+          action?: string;
+          table_name?: string;
+          record_id?: string;
+          old_values?: any;
+          new_values?: any;
+          ip_address?: string;
+          user_agent?: string;
+        };
+      };
+      settings: {
+        Row: {
+          id: string;
+          school_id: string;
+          key: string;
+          value: any;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          school_id: string;
+          key: string;
+          value: any;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          school_id?: string;
+          key?: string;
+          value?: any;
+          updated_at?: string;
+        };
+      };
       profiles: {
         Row: {
           id: string;
           email: string;
           name: string;
           role: 'admin' | 'teacher' | 'parent';
+          school_id?: string;
           avatar_url?: string;
           phone?: string;
           address?: string;
@@ -18,6 +210,7 @@ export interface Database {
           email: string;
           name: string;
           role: 'admin' | 'teacher' | 'parent';
+          school_id?: string;
           avatar_url?: string;
           phone?: string;
           address?: string;
@@ -29,6 +222,7 @@ export interface Database {
           email?: string;
           name?: string;
           role?: 'admin' | 'teacher' | 'parent';
+          school_id?: string;
           avatar_url?: string;
           phone?: string;
           address?: string;
@@ -42,6 +236,7 @@ export interface Database {
           email: string;
           phone: string;
           class_id: string;
+          school_id?: string;
           roll_number: string;
           date_of_birth: string;
           address: string;
@@ -58,6 +253,7 @@ export interface Database {
           email: string;
           phone: string;
           class_id: string;
+          school_id?: string;
           roll_number: string;
           date_of_birth: string;
           address: string;
@@ -74,6 +270,7 @@ export interface Database {
           email?: string;
           phone?: string;
           class_id?: string;
+          school_id?: string;
           roll_number?: string;
           date_of_birth?: string;
           address?: string;

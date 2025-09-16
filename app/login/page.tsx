@@ -95,36 +95,31 @@ export default function LoginPage() {
 
       startTransition(async () => {
         try {
-          // Try real authentication first
-          try {
-            await signIn(data.email, data.password);
-          } catch (authError) {
-            // Fallback to mock authentication for demo
-            const mockUser = mockUsers[data.role];
-            
-            if (
-              data.email === mockUser.email &&
-              data.password === mockUser.password
-            ) {
-              login(mockUser.user);
-              // Immediate redirect without delay
-              if (data.role === "admin") {
-                router.push("/");
-              } else if (data.role === "teacher") {
-                router.push("/teacher/dashboard");
-              } else if (data.role === "parent") {
-                router.push("/parent/dashboard");
-              }
-            } else {
-              setError("Invalid email or password");
+          // Fallback to mock authentication for demo
+          const mockUser = mockUsers[data.role];
+          
+          if (
+            data.email === mockUser.email &&
+            data.password === mockUser.password
+          ) {
+            login(mockUser.user);
+            // Immediate redirect without delay
+            if (data.role === "admin") {
+              router.push("/");
+            } else if (data.role === "teacher") {
+              router.push("/teacher/dashboard");
+            } else if (data.role === "parent") {
+              router.push("/parent/dashboard");
             }
+          } else {
+            setError("Invalid email or password");
           }
         } catch (err) {
           setError("Login failed. Please try again.");
         }
       });
     },
-    [signIn, login, router]
+    [login, router]
   );
 
   const handleDemoLogin = useCallback(
