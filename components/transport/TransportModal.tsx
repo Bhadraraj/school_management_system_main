@@ -35,6 +35,7 @@ export default function TransportModal({ open, onOpenChange, mode, transport }: 
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<TransportFormData>({
     resolver: zodResolver(transportSchema),
     defaultValues: transport || {},

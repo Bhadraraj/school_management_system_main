@@ -27,6 +27,11 @@ import {
 // Import the Pagination component
 import Pagination from "@/components/ui/pagination";
 
+interface FeesTableProps {
+  onEdit?: (fees: any) => void;
+  onDelete?: (fees: any) => void;
+}
+
 const feesData = [
   {
     name: "Jessia Rose",
@@ -75,7 +80,7 @@ const feesData = [
   },
 ];
 
-export default function FeesTable() {
+export default function FeesTable({ onEdit, onDelete }: FeesTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(4);
   const [itemsPerPage, setItemsPerPage] = useState("10");
@@ -210,10 +215,18 @@ export default function FeesTable() {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onDelete?.(student)}
+                      >
                         <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onEdit?.(student)}
+                      >
                         <Edit className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                       </Button>
                     </div>
@@ -308,10 +321,18 @@ export default function FeesTable() {
                   </td>
                   <td className="py-4 px-2">
                     <div className="flex items-center justify-end space-x-1">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onDelete?.(student)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => onEdit?.(student)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                     </div>
@@ -348,10 +369,18 @@ export default function FeesTable() {
                   </div>
                 </div>
                 <div className="flex space-x-1">
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onDelete?.(student)}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onEdit?.(student)}
+                  >
                     <Edit className="w-4 h-4" />
                   </Button>
                 </div>

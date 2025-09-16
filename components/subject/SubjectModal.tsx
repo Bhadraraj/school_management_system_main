@@ -34,6 +34,7 @@ export default function SubjectModal({ open, onOpenChange, mode, subject }: Subj
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<SubjectFormData>({
     resolver: zodResolver(subjectSchema),
     defaultValues: subject || {},
@@ -91,7 +92,7 @@ export default function SubjectModal({ open, onOpenChange, mode, subject }: Subj
 
           <div className="space-y-2">
             <Label htmlFor="teacher">Assign Teacher</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('teacher', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select teacher" />
               </SelectTrigger>
@@ -106,7 +107,7 @@ export default function SubjectModal({ open, onOpenChange, mode, subject }: Subj
 
           <div className="space-y-2">
             <Label htmlFor="credits">Credits</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('credits', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select credits" />
               </SelectTrigger>

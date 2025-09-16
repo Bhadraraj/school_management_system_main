@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
+import ExpensesModal from "@/components/expenses/ExpensesModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,27 @@ const expensesData = [
 
 export default function ExpensesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [selectedExpense, setSelectedExpense] = useState(null);
+
+  const handleCreate = () => {
+    setModalMode("create");
+    setSelectedExpense(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (expense: any) => {
+    setModalMode("edit");
+    setSelectedExpense(expense);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (expense: any) => {
+    if (confirm("Are you sure you want to delete this expense?")) {
+      console.log("Delete expense:", expense);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -85,7 +107,8 @@ export default function ExpensesPage() {
   };
 
   return (
-    <Layout allowedRoles={["admin"]}>
+    <>
+      <Layout allowedRoles={["admin"]}>
       <div className="space-y-6">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1 mr-4">
@@ -122,6 +145,7 @@ export default function ExpensesPage() {
             </div>
           </div>
           <Button
+            onClick={handleCreate}
             size="sm"
             className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
           >
@@ -220,10 +244,18 @@ export default function ExpensesPage() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEdit(expense)}
+                          >
                             <Edit className="w-4 h-4 text-gray-400" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDelete(expense)}
+                          >
                             <Trash2 className="w-4 h-4 text-gray-400" />
                           </Button>
                         </div>
@@ -237,5 +269,13 @@ export default function ExpensesPage() {
         </Card>
       </div>
     </Layout>
+
+    <ExpensesModal
+      open={isModalOpen}
+      onOpenChange={setIsModalOpen}
+      mode={modalMode}
+      expense={selectedExpense}
+    />
+  </>
   );
 }

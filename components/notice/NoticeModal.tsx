@@ -35,6 +35,7 @@ export default function NoticeModal({ open, onOpenChange, mode, notice }: Notice
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<NoticeFormData>({
     resolver: zodResolver(noticeSchema),
     defaultValues: notice || {},
@@ -104,7 +105,7 @@ export default function NoticeModal({ open, onOpenChange, mode, notice }: Notice
 
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('priority', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -119,7 +120,7 @@ export default function NoticeModal({ open, onOpenChange, mode, notice }: Notice
 
           <div className="space-y-2">
             <Label htmlFor="targetAudience">Target Audience</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('targetAudience', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select audience" />
               </SelectTrigger>

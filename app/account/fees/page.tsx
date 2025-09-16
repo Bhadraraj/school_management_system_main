@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import FeesTable from "@/components/fees/FeesTable";
+import FeesModal from "@/components/fees/FeesModal";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -14,8 +16,19 @@ import {
 import { Plus } from "lucide-react";
 
 export default function FeesCollectionPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [selectedFees, setSelectedFees] = useState(null);
+
+  const handleCreate = () => {
+    setModalMode("create");
+    setSelectedFees(null);
+    setIsModalOpen(true);
+  };
+
   return (
-    <Layout allowedRoles={["admin"]}>
+    <>
+      <Layout allowedRoles={["admin"]}>
       <div className="space-y-6">
        
         <div className="flex items-center justify-between">
@@ -33,13 +46,35 @@ export default function FeesCollectionPage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button 
+            onClick={handleCreate}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
             <Plus className="w-3 h-3 sm:mr-1" />
             <span className="hidden sm:inline">Add </span>
           </Button>
         </div>
-        <FeesTable />
+        <FeesTable 
+          onEdit={(fees) => {
+            setModalMode("edit");
+            setSelectedFees(fees);
+            setIsModalOpen(true);
+          }}
+          onDelete={(fees) => {
+            if (confirm("Are you sure you want to delete this fee record?")) {
+              console.log("Delete fees:", fees);
+            }
+          }}
+        />
       </div>
     </Layout>
+
+    <FeesModal
+      open={isModalOpen}
+      onOpenChange={setIsModalOpen}
+      mode={modalMode}
+      fees={selectedFees}
+    />
+  </>
   );
 }

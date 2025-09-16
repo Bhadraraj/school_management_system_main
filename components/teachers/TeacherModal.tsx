@@ -35,6 +35,7 @@ const TeacherModal = memo(function TeacherModal({ open, onOpenChange, mode, teac
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<TeacherFormData>({
     resolver: zodResolver(teacherSchema),
     defaultValues: teacher || {},
@@ -119,7 +120,7 @@ const TeacherModal = memo(function TeacherModal({ open, onOpenChange, mode, teac
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('subject', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>

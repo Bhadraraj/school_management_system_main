@@ -36,6 +36,7 @@ export default function RoutineModal({ open, onOpenChange, mode, routine }: Rout
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<RoutineFormData>({
     resolver: zodResolver(routineSchema),
     defaultValues: routine || {},
@@ -68,7 +69,7 @@ export default function RoutineModal({ open, onOpenChange, mode, routine }: Rout
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="subject">Subject</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('subject', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
@@ -84,7 +85,7 @@ export default function RoutineModal({ open, onOpenChange, mode, routine }: Rout
 
             <div className="space-y-2">
               <Label htmlFor="teacher">Teacher</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('teacher', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select teacher" />
                 </SelectTrigger>
@@ -100,7 +101,7 @@ export default function RoutineModal({ open, onOpenChange, mode, routine }: Rout
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="class">Class</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('class', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
@@ -115,7 +116,7 @@ export default function RoutineModal({ open, onOpenChange, mode, routine }: Rout
 
             <div className="space-y-2">
               <Label htmlFor="day">Day</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('day', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>

@@ -35,6 +35,7 @@ export default function ClassModal({ open, onOpenChange, mode, classData }: Clas
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<ClassFormData>({
     resolver: zodResolver(classSchema),
     defaultValues: classData || {},
@@ -92,7 +93,7 @@ export default function ClassModal({ open, onOpenChange, mode, classData }: Clas
 
           <div className="space-y-2">
             <Label htmlFor="teacher">Assign Teacher</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('teacher', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select teacher" />
               </SelectTrigger>
@@ -107,7 +108,7 @@ export default function ClassModal({ open, onOpenChange, mode, classData }: Clas
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('subject', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>

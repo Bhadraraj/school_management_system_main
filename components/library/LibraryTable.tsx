@@ -79,24 +79,10 @@ const books = [
 
 export default function LibraryTable() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selectedBook, setSelectedBook] = useState(null);
 
-  const handleEdit = (book: any) => {
-    setModalMode("edit");
-    setSelectedBook(book);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (book: any) => {
-    if (confirm("Are you sure you want to delete this book?")) {
-      console.log("Delete book:", book);
-    }
-  };
 
   return (
-    <>
+    <div>
       <Card>
         <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
@@ -200,14 +186,18 @@ export default function LibraryTable() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(book)}
+                          onClick={() => console.log('Edit book:', book)}
                         >
                           <Edit className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(book)}
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this book?")) {
+                              console.log("Delete book:", book);
+                            }
+                          }}
                         >
                           <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                         </Button>
@@ -221,12 +211,6 @@ export default function LibraryTable() {
         </CardContent>
       </Card>
 
-      <LibraryModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        mode={modalMode}
-        book={selectedBook}
-      />
-    </>
+    </div>
   );
 }

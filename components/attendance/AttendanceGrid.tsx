@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,6 +35,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../ui/breadcrumb";
+
+interface AttendanceGridProps {
+  onOpenModal?: () => void;
+}
+
 const students = [
   "Michele Johnson",
   "Courtney Henry",
@@ -72,7 +78,7 @@ const generateAttendanceData = () => {
 
 const attendanceData = generateAttendanceData();
 
-export default function AttendanceGrid() {
+export default function AttendanceGrid({ onOpenModal }: AttendanceGridProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -90,7 +96,10 @@ export default function AttendanceGrid() {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <Button className="bg-purple-600 hover:bg-purple-700">
+        <Button 
+          onClick={onOpenModal}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
           <Plus className="w-3 h-3 sm:mr-1" />
           <span className="hidden sm:inline">Add </span>
         </Button>

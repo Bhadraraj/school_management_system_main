@@ -23,6 +23,10 @@ import {
 } from "lucide-react";
 import ExamScheduleModal from "./ExamScheduleModal";
 
+interface ExamScheduleTableProps {
+  onOpenModal?: () => void;
+}
+
 const examSchedules = [
   {
     examName: "Class Test",
@@ -60,12 +64,11 @@ const examSchedules = [
   },
 ];
 
-export default function ExamScheduleTable() {
+export default function ExamScheduleTable({ onOpenModal }: ExamScheduleTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <>
+    <div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="relative">
@@ -189,7 +192,6 @@ export default function ExamScheduleTable() {
         </CardContent>
       </Card>
 
-      <ExamScheduleModal open={isModalOpen} onOpenChange={setIsModalOpen} />
-    </>
+    </div>
   );
 }

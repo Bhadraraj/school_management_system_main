@@ -131,7 +131,7 @@ const StudentModal = memo(function StudentModal({
 
           <div className="space-y-2">
             <Label htmlFor="class">Class</Label>
-            <Select>
+            <Select onValueChange={(value) => setValue('class', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>

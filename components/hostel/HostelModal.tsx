@@ -35,6 +35,7 @@ export default function HostelModal({ open, onOpenChange, mode, hostel }: Hostel
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<HostelFormData>({
     resolver: zodResolver(hostelSchema),
     defaultValues: hostel || {},
@@ -79,7 +80,7 @@ export default function HostelModal({ open, onOpenChange, mode, hostel }: Hostel
 
             <div className="space-y-2">
               <Label htmlFor="roomType">Room Type</Label>
-              <Select>
+              <Select onValueChange={(value) => setValue('warden', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
