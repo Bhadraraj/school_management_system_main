@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import SubjectModal from "@/components/subject/SubjectModal";
+import { subjectsApi } from "@/lib/api/subjects";
+import { teachersApi } from "@/lib/api/teachers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { Search, Plus, BookOpen, Edit, Trash2 } from "lucide-react";
 import {
   Breadcrumb,
@@ -18,46 +22,39 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
-const subjectsData = [
-  {
-    id: "SUB001",
-    name: "Mathematics",
-    teacher: "Dr. Sarah Wilson",
-    classes: ["Grade 10A", "Grade 10B"],
-    students: 60,
-    code: "MATH101",
-    credits: 4,
-    status: "Active",
-    icon: "https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "SUB002",
-    name: "Physics",
-    teacher: "Mr. John Davis",
-    classes: ["Grade 11A", "Grade 12A"],
-    students: 45,
-    code: "PHY201",
-    credits: 4,
-    status: "Active",
-    icon: "https://images.pexels.com/photos/256490/pexels-photo-256490.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "SUB003",
-    name: "English Literature",
-    teacher: "Ms. Emily Chen",
-    classes: ["Grade 9A", "Grade 9B"],
-    students: 58,
-    code: "ENG101",
-    credits: 3,
-    status: "Active",
-    icon: "https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-];
-
 export default function SubjectPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [subjectsData, teachersData] = await Promise.all([
+          subjectsApi.getAll(),
+          teachersApi.getAll(),
+        ]);
+        setSubjects(subjectsData);
+        setTeachers(teachersData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load subjects data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleCreate = () => {
     setModalMode("create");
@@ -71,12 +68,69 @@ export default function SubjectPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (subject: any) => {
-    if (confirm("Are you sure you want to delete this subject?")) {
-      console.log("Delete subject:", subject);
+  const handleDelete = async (subject: any) => {
+    if (confirm(`Are you sure you want to delete ${subject.name}?`)) {
+      try {
+        await subjectsApi.delete(subject.id);
+        setSubjects(prev => prev.filter(s => s.id !== subject.id));
+        toast({
+          title: "Success",
+          description: "Subject deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting subject:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete subject",
+          variant: "destructive",
+        });
+      }
     }
   };
 
+  const handleSubjectSaved = async () => {
+    try {
+      const subjectsData = await subjectsApi.getAll();
+      setSubjects(subjectsData);
+    } catch (error) {
+      console.error('Error refreshing subjects:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout allowedRoles={["admin", "teacher"]}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-10 w-64" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <>
       <Layout allowedRoles={["admin", "teacher"]}>
@@ -139,21 +193,18 @@ export default function SubjectPage() {
                         Classes
                       </th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
-                        Students
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
                         Credits
                       </th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
                         Status
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">
                         Action
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {subjectsData.map((subject) => (
+                    {subjects.map((subject) => (
                       <tr
                         key={subject.id}
                         className="border-b border-border hover:bg-accent transition-colors group"
@@ -162,7 +213,7 @@ export default function SubjectPage() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10 rounded-lg">
                               <AvatarImage
-                                src={subject.icon}
+                                src="https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=400"
                                 alt={subject.name}
                               />
                               <AvatarFallback className="rounded-lg">
@@ -178,20 +229,17 @@ export default function SubjectPage() {
                           {subject.code}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {subject.teacher}
+                          {subject.teachers?.[0]?.profiles?.name || 'No Teacher Assigned'}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {subject.classes.join(", ")}
-                        </td>
-                        <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {subject.students}
+                          {subject.classes?.map((c: any) => c.name).join(", ") || 'No Classes'}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
                           {subject.credits}
                         </td>
                         <td className="py-4 px-4">
                           <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                            {subject.status}
+                            {subject.status === 'active' ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
@@ -227,6 +275,8 @@ export default function SubjectPage() {
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         subject={selectedSubject}
+        teachers={teachers}
+        onSaved={handleSubjectSaved}
       />
     </>
   );

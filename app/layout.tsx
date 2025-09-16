@@ -5,6 +5,8 @@ import { Inter } from 'next/font/google';
 import { useEffect, memo } from 'react';
 import { useThemeStore } from '@/lib/store';
 import { applyTheme } from '@/lib/themes';
+import { useSupabaseAuth } from '@/lib/hooks/useSupabaseAuth';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -18,6 +20,7 @@ const RootLayout = memo(function RootLayout({
   children: React.ReactNode;
 }) {
   const { theme, isDark } = useThemeStore();
+  useSupabaseAuth();
 
   useEffect(() => {
     // Apply theme on mount and when theme changes
@@ -41,6 +44,7 @@ const RootLayout = memo(function RootLayout({
       </head>
       <body className={inter.className}>
         {children}
+        <Toaster />
       </body>
     </html>
   );

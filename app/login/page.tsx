@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
+import { authApi } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,30 +95,36 @@ export default function LoginPage() {
 
       startTransition(async () => {
         try {
-          const mockUser = mockUsers[data.role];
-
-          if (
-            data.email === mockUser.email &&
-            data.password === mockUser.password
-          ) {
-            login(mockUser.user);
-            // Immediate redirect without delay
-            if (data.role === "admin") {
-              router.push("/");
-            } else if (data.role === "teacher") {
-              router.push("/teacher/dashboard");
-            } else if (data.role === "parent") {
-              router.push("/parent/dashboard");
+          // Try real authentication first
+          try {
+            await signIn(data.email, data.password);
+          } catch (authError) {
+            // Fallback to mock authentication for demo
+            const mockUser = mockUsers[data.role];
+            
+            if (
+              data.email === mockUser.email &&
+              data.password === mockUser.password
+            ) {
+              login(mockUser.user);
+              // Immediate redirect without delay
+              if (data.role === "admin") {
+                router.push("/");
+              } else if (data.role === "teacher") {
+                router.push("/teacher/dashboard");
+              } else if (data.role === "parent") {
+                router.push("/parent/dashboard");
+              }
+            } else {
+              setError("Invalid email or password");
             }
-          } else {
-            setError("Invalid email or password");
           }
         } catch (err) {
           setError("Login failed. Please try again.");
         }
       });
     },
-    [login, router, setValue]
+    [signIn, login, router]
   );
 
   const handleDemoLogin = useCallback(

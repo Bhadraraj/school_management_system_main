@@ -1,6 +1,8 @@
 "use client";
 
 import { memo, useCallback } from "react";
+import { studentsApi, type StudentInsert, type StudentUpdate } from "@/lib/api/students";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +40,8 @@ interface StudentModalProps {
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   student?: any;
+  classes?: any[];
+  onSaved?: () => void;
 }
 
 const StudentModal = memo(function StudentModal({
@@ -45,7 +49,11 @@ const StudentModal = memo(function StudentModal({
   onOpenChange,
   mode,
   student,
+  classes = [],
+  onSaved,
 }: StudentModalProps) {
+  const { toast } = useToast();
+  
   const {
     register,
     handleSubmit,
@@ -54,16 +62,57 @@ const StudentModal = memo(function StudentModal({
     setValue,
   } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
-    defaultValues: student || {},
+    defaultValues: student ? {
+      name: student.name,
+      email: student.email,
+      phone: student.phone,
+      class: student.class_id,
+      roll: student.roll_number,
+      address: student.address,
+    } : {},
   });
 
   const onSubmit = useCallback(
     (data: StudentFormData) => {
-      console.log("Student form submitted:", data);
-      reset();
-      onOpenChange(false);
+      try {
+        const studentData = {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          class_id: data.class,
+          roll_number: data.roll,
+          address: data.address,
+          date_of_birth: '2008-01-01', // Default date, should be added to form
+          admission_date: new Date().toISOString().split('T')[0],
+        };
+
+        if (mode === 'create') {
+          await studentsApi.create(studentData as StudentInsert);
+          toast({
+            title: "Success",
+            description: "Student created successfully",
+          });
+        } else if (student) {
+          await studentsApi.update(student.id, studentData as StudentUpdate);
+          toast({
+            title: "Success",
+            description: "Student updated successfully",
+          });
+        }
+
+        reset();
+        onOpenChange(false);
+        onSaved?.();
+      } catch (error) {
+        console.error('Error saving student:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save student",
+          variant: "destructive",
+        });
+      }
     },
-    [reset, onOpenChange]
+    [mode, student, reset, onOpenChange, onSaved, toast]
   );
 
   return (
@@ -131,19 +180,24 @@ const StudentModal = memo(function StudentModal({
 
           <div className="space-y-2">
             <Label htmlFor="class">Class</Label>
-            <Select onValueChange={(value) => setValue('class', value)}>
+            <Select 
+              value={student?.class_id}
+              onValueChange={(value) => setValue('class', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="grade-9a">Grade 9A</SelectItem>
-                <SelectItem value="grade-9b">Grade 9B</SelectItem>
-                <SelectItem value="grade-10a">Grade 10A</SelectItem>
-                <SelectItem value="grade-10b">Grade 10B</SelectItem>
-                <SelectItem value="grade-11a">Grade 11A</SelectItem>
-                <SelectItem value="grade-12a">Grade 12A</SelectItem>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {errors.class && (
+              <p className="text-sm text-red-600">{errors.class.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
+import { dashboardApi } from '@/lib/api/dashboard';
 import Layout from '@/components/layout/Layout';
 import StatsCards from '@/components/dashboard/StatsCards';
 import ExamResultsChart from '@/components/dashboard/ExamResultsChart';
@@ -14,6 +15,8 @@ import { GraduationCap } from 'lucide-react';
 export default function Dashboard() {
   const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -32,6 +35,27 @@ export default function Dashboard() {
     // Admin stays on main dashboard
   }, [isAuthenticated, user, router]);
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (user?.role === 'admin') {
+        try {
+          const [stats, activities] = await Promise.all([
+            dashboardApi.getStats(),
+            dashboardApi.getRecentActivities(),
+          ]);
+          setDashboardData({ stats, activities });
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -66,7 +90,7 @@ export default function Dashboard() {
           <p className="text-gray-600">Welcome back, {user.name}! Here's what's happening at your school today.</p>
         </div>
 
-        <StatsCards />
+        <StatsCards data={dashboardData?.stats} loading={loading} />
 
         <div className="flex flex-col lg:flex-row gap-6">
           <ExamResultsChart />

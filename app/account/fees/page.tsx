@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import FeesTable from "@/components/fees/FeesTable";
 import FeesModal from "@/components/fees/FeesModal";
+import { feesApi } from "@/lib/api/fees";
+import { studentsApi } from "@/lib/api/students";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,6 +22,34 @@ export default function FeesCollectionPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedFees, setSelectedFees] = useState(null);
+  const [fees, setFees] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [feesData, studentsData] = await Promise.all([
+          feesApi.getAll(),
+          studentsApi.getAll(),
+        ]);
+        setFees(feesData);
+        setStudents(studentsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load fees data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleCreate = () => {
     setModalMode("create");
@@ -26,6 +57,14 @@ export default function FeesCollectionPage() {
     setIsModalOpen(true);
   };
 
+  const handleFeesSaved = async () => {
+    try {
+      const feesData = await feesApi.getAll();
+      setFees(feesData);
+    } catch (error) {
+      console.error('Error refreshing fees:', error);
+    }
+  };
   return (
     <>
       <Layout allowedRoles={["admin"]}>
@@ -55,14 +94,30 @@ export default function FeesCollectionPage() {
           </Button>
         </div>
         <FeesTable 
+          fees={fees}
+          loading={loading}
           onEdit={(fees) => {
             setModalMode("edit");
             setSelectedFees(fees);
             setIsModalOpen(true);
           }}
-          onDelete={(fees) => {
-            if (confirm("Are you sure you want to delete this fee record?")) {
-              console.log("Delete fees:", fees);
+          onDelete={async (fees) => {
+            if (confirm(`Are you sure you want to delete this fee record for ${fees.students?.name}?`)) {
+              try {
+                await feesApi.delete(fees.id);
+                setFees(prev => prev.filter(f => f.id !== fees.id));
+                toast({
+                  title: "Success",
+                  description: "Fee record deleted successfully",
+                });
+              } catch (error) {
+                console.error('Error deleting fee:', error);
+                toast({
+                  title: "Error",
+                  description: "Failed to delete fee record",
+                  variant: "destructive",
+                });
+              }
             }
           }}
         />
@@ -74,6 +129,8 @@ export default function FeesCollectionPage() {
       onOpenChange={setIsModalOpen}
       mode={modalMode}
       fees={selectedFees}
+      students={students}
+      onSaved={handleFeesSaved}
     />
   </>
   );

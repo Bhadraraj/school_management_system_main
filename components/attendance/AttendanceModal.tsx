@@ -30,23 +30,34 @@ interface AttendanceModalProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   attendance?: any;
+  classes?: any[];
+  students?: any[];
 }
 
-const mockStudents = [
-  { id: 'STU001', name: 'Alice Johnson' },
-  { id: 'STU002', name: 'Bob Smith' },
-  { id: 'STU003', name: 'Carol Davis' },
-  { id: 'STU004', name: 'David Wilson' },
-  { id: 'STU005', name: 'Emma Brown' },
-];
-
-const AttendanceModal = memo(function AttendanceModal({ open, onOpenChange, mode, attendance }: AttendanceModalProps) {
+const AttendanceModal = memo(function AttendanceModal({ 
+  open, 
+  onOpenChange, 
+  mode, 
+  attendance, 
+  classes = [],
+  students = [] 
+}: AttendanceModalProps) {
   const [studentAttendance, setStudentAttendance] = useState(
-    mockStudents.map(student => ({
+    students.slice(0, 10).map(student => ({
       ...student,
       status: 'present' as 'present' | 'absent' | 'late'
     }))
   );
+
+  // Update student attendance when students prop changes
+  useEffect(() => {
+    setStudentAttendance(
+      students.slice(0, 10).map(student => ({
+        ...student,
+        status: 'present' as 'present' | 'absent' | 'late'
+      }))
+    );
+  }, [students]);
 
   const {
     register,
@@ -127,10 +138,11 @@ const AttendanceModal = memo(function AttendanceModal({ open, onOpenChange, mode
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="grade-9a">Grade 9A</SelectItem>
-                  <SelectItem value="grade-10a">Grade 10A</SelectItem>
-                  <SelectItem value="grade-10b">Grade 10B</SelectItem>
-                  <SelectItem value="grade-11a">Grade 11A</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.class && (
@@ -145,11 +157,13 @@ const AttendanceModal = memo(function AttendanceModal({ open, onOpenChange, mode
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mathematics">Mathematics</SelectItem>
-                  <SelectItem value="physics">Physics</SelectItem>
-                  <SelectItem value="chemistry">Chemistry</SelectItem>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="biology">Biology</SelectItem>
+                  {classes.find(c => c.id === watch('class'))?.subjects ? (
+                    <SelectItem value={classes.find(c => c.id === watch('class'))?.subjects?.id}>
+                      {classes.find(c => c.id === watch('class'))?.subjects?.name}
+                    </SelectItem>
+                  ) : (
+                    <SelectItem value="" disabled>Select class first</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               {errors.subject && (

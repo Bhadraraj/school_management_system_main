@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, memo, useCallback, useMemo } from "react";
+import { useState, memo, useCallback, useMemo, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import TeacherModal from "@/components/teachers/TeacherModal";
+import { teachersApi } from "@/lib/api/teachers";
+import { subjectsApi } from "@/lib/api/subjects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -20,50 +24,40 @@ import {
 } from "lucide-react";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb";
 
-const teachersData = [
-  {
-    id: "TEA001",
-    name: "Dr. Sarah Wilson",
-    subject: "Mathematics",
-    class: "Grade 10A, 10B",
-    phone: "+1 234 567 8901",
-    email: "sarah.wilson@school.edu",
-    experience: "8 years",
-    status: "Active",
-    avatar:
-      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "TEA002",
-    name: "Mr. John Davis",
-    subject: "Physics",
-    class: "Grade 11A, 12A",
-    phone: "+1 234 567 8902",
-    email: "john.davis@school.edu",
-    experience: "12 years",
-    status: "Active",
-    avatar:
-      "https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "TEA003",
-    name: "Ms. Emily Chen",
-    subject: "English Literature",
-    class: "Grade 9A, 9B",
-    phone: "+1 234 567 8903",
-    email: "emily.chen@school.edu",
-    experience: "5 years",
-    status: "On Leave",
-    avatar:
-      "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-];
-
 const TeachersPage = memo(function TeachersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch teachers and subjects
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [teachersData, subjectsData] = await Promise.all([
+          teachersApi.getAll(),
+          subjectsApi.getAll(),
+        ]);
+        setTeachers(teachersData);
+        setSubjects(subjectsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load teachers data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleCreate = useCallback(() => {
     setModalMode("create");
@@ -77,22 +71,79 @@ const TeachersPage = memo(function TeachersPage() {
     setIsModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback((teacher: any) => {
-    if (confirm("Are you sure you want to delete this teacher?")) {
-      console.log("Delete teacher:", teacher);
+  const handleDelete = useCallback(async (teacher: any) => {
+    if (confirm(`Are you sure you want to delete ${teacher.profiles?.name}?`)) {
+      try {
+        await teachersApi.delete(teacher.id);
+        setTeachers(prev => prev.filter(t => t.id !== teacher.id));
+        toast({
+          title: "Success",
+          description: "Teacher deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting teacher:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete teacher",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [toast]);
+
+  const handleTeacherSaved = useCallback(async () => {
+    try {
+      const teachersData = await teachersApi.getAll();
+      setTeachers(teachersData);
+    } catch (error) {
+      console.error('Error refreshing teachers:', error);
     }
   }, []);
 
   // Filtered teachers by search
   const filteredTeachers = useMemo(() => {
-    return teachersData.filter(
+    return teachers.filter(
       (teacher) =>
-        teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        teacher.profiles?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         teacher.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        teacher.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        teacher.class.toLowerCase().includes(searchQuery.toLowerCase())
+        teacher.subjects?.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [teachers, searchQuery]);
+
+  if (loading) {
+    return (
+      <Layout allowedRoles={["admin"]}>
+        <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-10 w-64" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <>
@@ -191,50 +242,52 @@ const TeachersPage = memo(function TeachersPage() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage
-                                src={teacher.avatar}
-                                alt={teacher.name}
+                                src={teacher.profiles?.avatar_url}
+                                alt={teacher.profiles?.name}
                               />
                               <AvatarFallback>
-                                {teacher.name
+                                {teacher.profiles?.name
                                   .split(" ")
                                   .map((n) => n[0])
                                   .join("")}
                               </AvatarFallback>
                             </Avatar>
                             <span className="font-medium text-foreground group-hover:text-accent-foreground">
-                              {teacher.name}
+                              {teacher.profiles?.name}
                             </span>
                           </div>
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {teacher.id}
+                          {teacher.id.slice(0, 8)}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {teacher.subject}
+                          {teacher.subjects?.name || 'No Subject'}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {teacher.class}
+                          {teacher.classes?.map((c: any) => c.name).join(', ') || 'No Classes'}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground whitespace-nowrap">
-                          {teacher.phone}
+                          {teacher.profiles?.phone}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground whitespace-nowrap">
-                          {teacher.experience}
+                          {teacher.experience_years} years
                         </td>
                         <td className="py-4 px-4">
                           <Badge
                             variant={
-                              teacher.status === "Active"
+                              teacher.status === "active"
                                 ? "default"
                                 : "secondary"
                             }
                             className={
-                              teacher.status === "Active"
+                              teacher.status === "active"
                                 ? "bg-green-100 text-green-700 hover:bg-green-100"
+                                : teacher.status === "on_leave"
+                                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                             }
                           >
-                            {teacher.status}
+                            {teacher.status === 'active' ? 'Active' : teacher.status === 'on_leave' ? 'On Leave' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
@@ -293,11 +346,11 @@ const TeachersPage = memo(function TeachersPage() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-8 h-8">
                               <AvatarImage
-                                src={teacher.avatar}
-                                alt={teacher.name}
+                                src={teacher.profiles?.avatar_url}
+                                alt={teacher.profiles?.name}
                               />
                               <AvatarFallback>
-                                {teacher.name
+                                {teacher.profiles?.name
                                   .split(" ")
                                   .map((n) => n[0])
                                   .join("")}
@@ -305,10 +358,10 @@ const TeachersPage = memo(function TeachersPage() {
                             </Avatar>
                             <div>
                               <div className="font-medium text-foreground">
-                                {teacher.name}
+                                {teacher.profiles?.name}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {teacher.id}
+                                {teacher.id.slice(0, 8)}
                               </div>
                             </div>
                           </div>
@@ -316,37 +369,39 @@ const TeachersPage = memo(function TeachersPage() {
                         <td className="py-4 px-2">
                           <div className="text-sm">
                             <div className="text-muted-foreground">
-                              {teacher.subject}
+                              {teacher.subjects?.name || 'No Subject'}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {teacher.class}
+                              {teacher.experience_years} years exp.
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-2">
                           <div className="text-sm">
                             <div className="text-muted-foreground break-all">
-                              {teacher.phone}
+                              {teacher.profiles?.phone}
                             </div>
                             <div className="text-xs text-muted-foreground break-all">
-                              {teacher.email}
+                              {teacher.profiles?.email}
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-2">
                           <Badge
                             variant={
-                              teacher.status === "Active"
+                              teacher.status === "active"
                                 ? "default"
                                 : "secondary"
                             }
                             className={
-                              teacher.status === "Active"
+                              teacher.status === "active"
                                 ? "bg-green-100 text-green-700 hover:bg-green-100"
+                                : teacher.status === "on_leave"
+                                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                             }
                           >
-                            {teacher.status}
+                            {teacher.status === 'active' ? 'Active' : teacher.status === 'on_leave' ? 'On Leave' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="py-4 px-2">
@@ -385,11 +440,11 @@ const TeachersPage = memo(function TeachersPage() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="w-12 h-12">
                           <AvatarImage
-                            src={teacher.avatar}
-                            alt={teacher.name}
+                            src={teacher.profiles?.avatar_url}
+                            alt={teacher.profiles?.name}
                           />
                           <AvatarFallback>
-                            {teacher.name
+                            {teacher.profiles?.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
@@ -397,10 +452,10 @@ const TeachersPage = memo(function TeachersPage() {
                         </Avatar>
                         <div>
                           <h3 className="text-base font-semibold text-foreground">
-                            {teacher.name}
+                            {teacher.profiles?.name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {teacher.id}
+                            {teacher.id.slice(0, 8)}
                           </p>
                         </div>
                       </div>
@@ -431,7 +486,7 @@ const TeachersPage = memo(function TeachersPage() {
                             Subject & Classes
                           </p>
                           <p className="text-sm font-medium">
-                            {teacher.subject} ({teacher.class})
+                            {teacher.subjects?.name || 'No Subject'}
                           </p>
                         </div>
                       </div>
@@ -443,7 +498,7 @@ const TeachersPage = memo(function TeachersPage() {
                             Experience
                           </p>
                           <p className="text-sm font-medium">
-                            {teacher.experience}
+                            {teacher.experience_years} years
                           </p>
                         </div>
                       </div>
@@ -453,7 +508,7 @@ const TeachersPage = memo(function TeachersPage() {
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground">Phone</p>
                           <p className="text-sm font-medium break-all">
-                            {teacher.phone}
+                            {teacher.profiles?.phone}
                           </p>
                         </div>
                       </div>
@@ -463,7 +518,7 @@ const TeachersPage = memo(function TeachersPage() {
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground">Email</p>
                           <p className="text-sm font-medium break-all">
-                            {teacher.email}
+                            {teacher.profiles?.email}
                           </p>
                         </div>
                       </div>
@@ -473,15 +528,17 @@ const TeachersPage = memo(function TeachersPage() {
                     <div className="mt-4 flex justify-end">
                       <Badge
                         variant={
-                          teacher.status === "Active" ? "default" : "secondary"
+                          teacher.status === "active" ? "default" : "secondary"
                         }
                         className={
-                          teacher.status === "Active"
+                          teacher.status === "active"
                             ? "bg-green-100 text-green-700 hover:bg-green-100"
+                            : teacher.status === "on_leave"
+                            ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
                             : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                         }
                       >
-                        {teacher.status}
+                        {teacher.status === 'active' ? 'Active' : teacher.status === 'on_leave' ? 'On Leave' : 'Inactive'}
                       </Badge>
                     </div>
                   </div>
@@ -497,6 +554,8 @@ const TeachersPage = memo(function TeachersPage() {
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         teacher={selectedTeacher}
+        subjects={subjects}
+        onSaved={handleTeacherSaved}
       />
     </>
   );

@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, memo, useCallback, useMemo } from "react";
+import { useState, memo, useCallback, useMemo, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import StudentModal from "@/components/students/StudentModal";
+import { studentsApi, type Student } from "@/lib/api/students";
+import { classesApi } from "@/lib/api/classes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -20,48 +24,40 @@ import {
   Hash,
 } from "lucide-react";
 
-const studentsData = [
-  {
-    id: "STU001",
-    name: "Alice Johnson",
-    class: "Grade 10A",
-    roll: "001",
-    phone: "+1 234 567 8901",
-    email: "alice.johnson@email.com",
-    status: "Active",
-    avatar:
-      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "STU002",
-    name: "Bob Smith",
-    class: "Grade 10B",
-    roll: "002",
-    phone: "+1 234 567 8902",
-    email: "bob.smith@email.com",
-    status: "Active",
-    avatar:
-      "https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-  {
-    id: "STU003",
-    name: "Carol Davis",
-    class: "Grade 9A",
-    roll: "003",
-    phone: "+1 234 567 8903",
-    email: "carol.davis@email.com",
-    status: "Inactive",
-    avatar:
-      "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400",
-  },
-];
-
 const StudentsPage = memo(function StudentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
+  // Fetch students and classes
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [studentsData, classesData] = await Promise.all([
+          studentsApi.getAll(),
+          classesApi.getAll(),
+        ]);
+        setStudents(studentsData);
+        setClasses(classesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load students data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
   const handleCreate = useCallback(() => {
     setModalMode("create");
     setSelectedStudent(null);
@@ -74,12 +70,81 @@ const StudentsPage = memo(function StudentsPage() {
     setIsModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback((student: any) => {
-    if (confirm("Are you sure you want to delete this student?")) {
-      console.log("Delete student:", student);
+  const handleDelete = useCallback(async (student: any) => {
+    if (confirm(`Are you sure you want to delete ${student.name}?`)) {
+      try {
+        await studentsApi.delete(student.id);
+        setStudents(prev => prev.filter(s => s.id !== student.id));
+        toast({
+          title: "Success",
+          description: "Student deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete student",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [toast]);
+
+  const handleStudentSaved = useCallback(async () => {
+    try {
+      const studentsData = await studentsApi.getAll();
+      setStudents(studentsData);
+    } catch (error) {
+      console.error('Error refreshing students:', error);
     }
   }, []);
 
+  // Filter students based on search query
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery) return students;
+    
+    return students.filter(student =>
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.roll_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.classes?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [students, searchQuery]);
+
+  if (loading) {
+    return (
+      <Layout allowedRoles={["admin", "teacher"]}>
+        <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-10 w-64" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex items-center space-x-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <>
       <Layout allowedRoles={["admin", "teacher"]}>
@@ -139,7 +204,7 @@ const StudentsPage = memo(function StudentsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {studentsData.map((student) => (
+                    {filteredStudents.map((student) => (
                       <tr
                         key={student.id}
                         className="border-b border-border hover:bg-accent transition-colors group"
@@ -148,7 +213,7 @@ const StudentsPage = memo(function StudentsPage() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage
-                                src={student.avatar}
+                                src={student.avatar_url}
                                 alt={student.name}
                               />
                               <AvatarFallback>
@@ -167,10 +232,10 @@ const StudentsPage = memo(function StudentsPage() {
                           {student.id}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {student.class}
+                          {student.classes?.name || 'No Class'}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground">
-                          {student.roll}
+                          {student.roll_number}
                         </td>
                         <td className="py-4 px-4 text-muted-foreground group-hover:text-accent-foreground whitespace-nowrap">
                           {student.phone}
@@ -181,17 +246,17 @@ const StudentsPage = memo(function StudentsPage() {
                         <td className="py-4 px-4">
                           <Badge
                             variant={
-                              student.status === "Active"
+                              student.status === "active"
                                 ? "default"
                                 : "secondary"
                             }
                             className={
-                              student.status === "Active"
+                              student.status === "active"
                                 ? "bg-green-100 text-green-700 hover:bg-green-100"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                             }
                           >
-                            {student.status}
+                            {student.status === 'active' ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
@@ -241,7 +306,7 @@ const StudentsPage = memo(function StudentsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {studentsData.map((student) => (
+                    {filteredStudents.map((student) => (
                       <tr
                         key={student.id}
                         className="border-b border-border hover:bg-accent transition-colors group"
@@ -250,7 +315,7 @@ const StudentsPage = memo(function StudentsPage() {
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-8 h-8">
                               <AvatarImage
-                                src={student.avatar}
+                                src={student.avatar_url}
                                 alt={student.name}
                               />
                               <AvatarFallback>
@@ -265,7 +330,7 @@ const StudentsPage = memo(function StudentsPage() {
                                 {student.name}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {student.id}
+                                {student.id.slice(0, 8)}
                               </div>
                             </div>
                           </div>
@@ -273,10 +338,10 @@ const StudentsPage = memo(function StudentsPage() {
                         <td className="py-4 px-2">
                           <div className="text-sm">
                             <div className="text-muted-foreground">
-                              {student.class}
+                              {student.classes?.name || 'No Class'}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              Roll: {student.roll}
+                              Roll: {student.roll_number}
                             </div>
                           </div>
                         </td>
@@ -293,17 +358,17 @@ const StudentsPage = memo(function StudentsPage() {
                         <td className="py-4 px-2">
                           <Badge
                             variant={
-                              student.status === "Active"
+                              student.status === "active"
                                 ? "default"
                                 : "secondary"
                             }
                             className={
-                              student.status === "Active"
+                              student.status === "active"
                                 ? "bg-green-100 text-green-700 hover:bg-green-100"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                             }
                           >
-                            {student.status}
+                            {student.status === 'active' ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
                         <td className="py-4 px-2">
@@ -332,7 +397,7 @@ const StudentsPage = memo(function StudentsPage() {
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4 px-4">
-                {studentsData.map((student) => (
+                {filteredStudents.map((student) => (
                   <div
                     key={student.id}
                     className="bg-card text-card-foreground border rounded-xl p-4 shadow-md"
@@ -342,7 +407,7 @@ const StudentsPage = memo(function StudentsPage() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="w-12 h-12">
                           <AvatarImage
-                            src={student.avatar}
+                            src={student.avatar_url}
                             alt={student.name}
                           />
                           <AvatarFallback>
@@ -357,7 +422,7 @@ const StudentsPage = memo(function StudentsPage() {
                             {student.name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {student.id}
+                            {student.id.slice(0, 8)}
                           </p>
                         </div>
                       </div>
@@ -385,7 +450,7 @@ const StudentsPage = memo(function StudentsPage() {
                         <User className="w-4 h-4 mt-0.5 text-muted-foreground" />
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground">Class</p>
-                          <p className="text-sm font-medium">{student.class}</p>
+                          <p className="text-sm font-medium">{student.classes?.name || 'No Class'}</p>
                         </div>
                       </div>
 
@@ -393,7 +458,7 @@ const StudentsPage = memo(function StudentsPage() {
                         <Hash className="w-4 h-4 mt-0.5 text-muted-foreground" />
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground">Roll</p>
-                          <p className="text-sm font-medium">{student.roll}</p>
+                          <p className="text-sm font-medium">{student.roll_number}</p>
                         </div>
                       </div>
 
@@ -422,15 +487,15 @@ const StudentsPage = memo(function StudentsPage() {
                     <div className="mt-4 flex justify-end">
                       <Badge
                         variant={
-                          student.status === "Active" ? "default" : "secondary"
+                          student.status === "active" ? "default" : "secondary"
                         }
                         className={
-                          student.status === "Active"
+                          student.status === "active"
                             ? "bg-green-100 text-green-700 hover:bg-green-100"
                             : "bg-gray-100 text-gray-700 hover:bg-gray-100"
                         }
                       >
-                        {student.status}
+                        {student.status === 'active' ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                   </div>
@@ -446,6 +511,8 @@ const StudentsPage = memo(function StudentsPage() {
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         student={selectedStudent}
+        classes={classes}
+        onSaved={handleStudentSaved}
       />
     </>
   );

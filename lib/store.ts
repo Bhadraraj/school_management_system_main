@@ -3,6 +3,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase';
+import { authApi } from '@/lib/api/auth';
 
 export type Theme = 'default' | 'ocean' | 'forest' | 'sunset' | 'royal';
 export type UserRole = 'admin' | 'teacher' | 'parent';
@@ -26,8 +28,12 @@ interface ThemeState {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (user: User) => void;
   logout: () => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData: { name: string; role: UserRole; phone?: string; address?: string }) => Promise<void>;
+  getCurrentUser: () => Promise<void>;
 }
 
 interface AppState {
@@ -64,13 +70,70 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      loading: false,
       login: (user) => set({ user, isAuthenticated: true }),
       logout: () => {
         set({ user: null, isAuthenticated: false });
+        supabase.auth.signOut();
         // Clear localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth-storage');
           localStorage.removeItem('theme-storage');
+        }
+      },
+      signIn: async (email: string, password: string) => {
+        set({ loading: true });
+        try {
+          const { profile } = await authApi.signIn(email, password);
+          if (profile) {
+            set({
+              user: {
+                id: profile.id,
+                name: profile.name,
+                email: profile.email,
+                role: profile.role,
+                avatar: profile.avatar_url,
+              },
+              isAuthenticated: true,
+              loading: false,
+            });
+          }
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
+      },
+      signUp: async (email: string, password: string, userData) => {
+        set({ loading: true });
+        try {
+          await authApi.signUp(email, password, userData);
+          set({ loading: false });
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
+      },
+      getCurrentUser: async () => {
+        set({ loading: true });
+        try {
+          const result = await authApi.getCurrentUser();
+          if (result?.profile) {
+            set({
+              user: {
+                id: result.profile.id,
+                name: result.profile.name,
+                email: result.profile.email,
+                role: result.profile.role,
+                avatar: result.profile.avatar_url,
+              },
+              isAuthenticated: true,
+              loading: false,
+            });
+          } else {
+            set({ user: null, isAuthenticated: false, loading: false });
+          }
+        } catch (error) {
+          set({ user: null, isAuthenticated: false, loading: false });
         }
       },
     })),

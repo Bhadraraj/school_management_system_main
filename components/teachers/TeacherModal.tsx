@@ -1,6 +1,9 @@
 'use client';
 
 import { memo, useCallback } from 'react';
+import { teachersApi, type TeacherInsert, type TeacherUpdate } from '@/lib/api/teachers';
+import { authApi } from '@/lib/api/auth';
+import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,9 +30,20 @@ interface TeacherModalProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   teacher?: any;
+  subjects?: any[];
+  onSaved?: () => void;
 }
 
-const TeacherModal = memo(function TeacherModal({ open, onOpenChange, mode, teacher }: TeacherModalProps) {
+const TeacherModal = memo(function TeacherModal({ 
+  open, 
+  onOpenChange, 
+  mode, 
+  teacher, 
+  subjects = [],
+  onSaved 
+}: TeacherModalProps) {
+  const { toast } = useToast();
+  
   const {
     register,
     handleSubmit,
@@ -38,14 +52,76 @@ const TeacherModal = memo(function TeacherModal({ open, onOpenChange, mode, teac
     setValue,
   } = useForm<TeacherFormData>({
     resolver: zodResolver(teacherSchema),
-    defaultValues: teacher || {},
+    defaultValues: teacher ? {
+      name: teacher.profiles?.name,
+      email: teacher.profiles?.email,
+      phone: teacher.profiles?.phone,
+      subject: teacher.subject_id,
+      experience: teacher.experience_years?.toString(),
+      qualification: teacher.qualification,
+    } : {},
   });
 
-  const onSubmit = useCallback((data: TeacherFormData) => {
-    console.log('Teacher form submitted:', data);
-    reset();
-    onOpenChange(false);
-  }, [reset, onOpenChange]);
+  const onSubmit = useCallback(async (data: TeacherFormData) => {
+    try {
+      if (mode === 'create') {
+        // First create user profile
+        const profileData = await authApi.signUp(data.email, 'teacher123', {
+          name: data.name,
+          role: 'teacher',
+          phone: data.phone,
+        });
+
+        if (profileData.user) {
+          // Then create teacher record
+          const teacherData: TeacherInsert = {
+            profile_id: profileData.user.id,
+            subject_id: data.subject,
+            experience_years: parseInt(data.experience),
+            qualification: data.qualification,
+            join_date: new Date().toISOString().split('T')[0],
+          };
+
+          await teachersApi.create(teacherData);
+          toast({
+            title: "Success",
+            description: "Teacher created successfully",
+          });
+        }
+      } else if (teacher) {
+        // Update teacher record
+        const teacherData: TeacherUpdate = {
+          subject_id: data.subject,
+          experience_years: parseInt(data.experience),
+          qualification: data.qualification,
+        };
+
+        await teachersApi.update(teacher.id, teacherData);
+        
+        // Update profile
+        await authApi.updateProfile(teacher.profile_id, {
+          name: data.name,
+          phone: data.phone,
+        });
+
+        toast({
+          title: "Success",
+          description: "Teacher updated successfully",
+        });
+      }
+
+      reset();
+      onOpenChange(false);
+      onSaved?.();
+    } catch (error) {
+      console.error('Error saving teacher:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save teacher",
+        variant: "destructive",
+      });
+    }
+  }, [mode, teacher, reset, onOpenChange, onSaved, toast]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,20 +196,24 @@ const TeacherModal = memo(function TeacherModal({ open, onOpenChange, mode, teac
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
-            <Select onValueChange={(value) => setValue('subject', value)}>
+            <Select 
+              value={teacher?.subject_id}
+              onValueChange={(value) => setValue('subject', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="mathematics">Mathematics</SelectItem>
-                <SelectItem value="physics">Physics</SelectItem>
-                <SelectItem value="chemistry">Chemistry</SelectItem>
-                <SelectItem value="biology">Biology</SelectItem>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="history">History</SelectItem>
-                <SelectItem value="geography">Geography</SelectItem>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {errors.subject && (
+              <p className="text-sm text-red-600">{errors.subject.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
