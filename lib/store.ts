@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
 import { authApi } from '@/lib/api/auth';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type Theme = 'default' | 'ocean' | 'forest' | 'sunset' | 'royal';
 export type UserRole = 'admin' | 'teacher' | 'parent';
@@ -74,7 +75,9 @@ export const useAuthStore = create<AuthState>()(
       login: (user) => set({ user, isAuthenticated: true }),
       logout: () => {
         set({ user: null, isAuthenticated: false });
-        supabase.auth.signOut();
+        if (isSupabaseConfigured()) {
+          supabase.auth.signOut();
+        }
         // Clear localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth-storage');
@@ -84,6 +87,12 @@ export const useAuthStore = create<AuthState>()(
       signIn: async (email: string, password: string) => {
         set({ loading: true });
         try {
+          if (!isSupabaseConfigured()) {
+            // Demo mode - skip actual authentication
+            set({ loading: false });
+            return;
+          }
+
           const { profile } = await authApi.signIn(email, password);
           if (profile) {
             set({
@@ -106,6 +115,11 @@ export const useAuthStore = create<AuthState>()(
       signUp: async (email: string, password: string, userData) => {
         set({ loading: true });
         try {
+          if (!isSupabaseConfigured()) {
+            set({ loading: false });
+            return;
+          }
+
           await authApi.signUp(email, password, userData);
           set({ loading: false });
         } catch (error) {
@@ -116,6 +130,11 @@ export const useAuthStore = create<AuthState>()(
       getCurrentUser: async () => {
         set({ loading: true });
         try {
+          if (!isSupabaseConfigured()) {
+            set({ user: null, isAuthenticated: false, loading: false });
+            return;
+          }
+
           const result = await authApi.getCurrentUser();
           if (result?.profile) {
             set({

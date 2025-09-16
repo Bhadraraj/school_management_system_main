@@ -19,6 +19,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [stats, activities] = await Promise.all([
+          dashboardApi.getStats(),
+          dashboardApi.getRecentActivities(),
+        ]);
+        setDashboardData({ stats, activities });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
     if (!isAuthenticated || !user) {
       router.replace('/login');
       return;
@@ -32,62 +50,14 @@ export default function Dashboard() {
       router.replace('/parent/dashboard');
       return;
     }
-    // Admin stays on main dashboard
   }, [isAuthenticated, user, router]);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (user?.role === 'admin') {
-        try {
-          const [stats, activities] = await Promise.all([
-            dashboardApi.getStats(),
-            dashboardApi.getRecentActivities(),
-          ]);
-          setDashboardData({ stats, activities });
-        } catch (error) {
-          console.error('Error fetching dashboard data:', error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [user]);
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-8 h-8 text-white animate-pulse" />
-          </div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (user.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-8 h-8 text-primary-foreground animate-pulse" />
-          </div>
-          <p className="text-muted-foreground">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Layout allowedRoles={['admin']}>
       <div className="space-y-6">
         <div>
           <h1 className="text-lg font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user.name}! Here's what's happening at your school today.</p>
+          <p className="text-gray-600">Welcome back, {user?.name || 'Admin'}! Here's what's happening at your school today.</p>
         </div>
 
         <StatsCards data={dashboardData?.stats} loading={loading} />

@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
+import { mockData, mockApiDelay } from './mock-data';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type Fee = Database['public']['Tables']['fees']['Row'];
 export type FeeInsert = Database['public']['Tables']['fees']['Insert'];
@@ -8,6 +10,11 @@ export type FeeUpdate = Database['public']['Tables']['fees']['Update'];
 export const feesApi = {
   // Get all fees with student data
   async getAll() {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.fees;
+    }
+
     const { data, error } = await supabase
       .from('fees')
       .select(`
@@ -30,6 +37,11 @@ export const feesApi = {
 
   // Get fee by ID
   async getById(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.fees.find(f => f.id === id) || null;
+    }
+
     const { data, error } = await supabase
       .from('fees')
       .select(`
@@ -54,6 +66,25 @@ export const feesApi = {
 
   // Create new fee record
   async create(fee: FeeInsert) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const newFee = {
+        ...fee,
+        id: `fee-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        students: {
+          id: fee.student_id,
+          name: 'Demo Student',
+          roll_number: '001',
+          avatar_url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
+          classes: { name: 'Demo Class' }
+        }
+      };
+      mockData.fees.push(newFee as any);
+      return newFee;
+    }
+
     const { data, error } = await supabase
       .from('fees')
       .insert(fee)
@@ -66,6 +97,16 @@ export const feesApi = {
 
   // Update fee record
   async update(id: string, updates: FeeUpdate) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.fees.findIndex(f => f.id === id);
+      if (index !== -1) {
+        mockData.fees[index] = { ...mockData.fees[index], ...updates };
+        return mockData.fees[index];
+      }
+      throw new Error('Fee not found');
+    }
+
     const { data, error } = await supabase
       .from('fees')
       .update(updates)
@@ -79,6 +120,15 @@ export const feesApi = {
 
   // Delete fee record
   async delete(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.fees.findIndex(f => f.id === id);
+      if (index !== -1) {
+        mockData.fees.splice(index, 1);
+      }
+      return;
+    }
+
     const { error } = await supabase
       .from('fees')
       .delete()

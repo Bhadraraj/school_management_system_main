@@ -1,8 +1,15 @@
 import { supabase } from '@/lib/supabase';
+import { mockData, mockApiDelay } from './mock-data';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export const dashboardApi = {
   // Get dashboard statistics
   async getStats() {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.dashboardStats;
+    }
+
     try {
       // Get counts for different entities
       const [
@@ -49,6 +56,16 @@ export const dashboardApi = {
 
   // Get recent activities
   async getRecentActivities() {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return {
+        students: mockData.students.slice(0, 5),
+        exams: [],
+        notices: [],
+        fees: mockData.fees.slice(0, 5),
+      };
+    }
+
     try {
       const [
         recentStudents,

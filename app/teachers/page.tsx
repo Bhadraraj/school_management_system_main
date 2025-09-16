@@ -187,6 +187,13 @@ const TeachersPage = memo(function TeachersPage() {
               <CardTitle className="text-lg sm:text-xl font-semibold">
                 All Teachers
               </CardTitle>
+              <Button
+                onClick={handleCreate}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Plus className="w-3 h-3 sm:mr-1" />
+                <span className="hidden sm:inline">Add Teacher</span>
+              </Button>
               <div className="w-full sm:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />

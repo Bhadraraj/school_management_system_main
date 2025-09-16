@@ -65,29 +65,20 @@ const TeacherModal = memo(function TeacherModal({
   const onSubmit = useCallback(async (data: TeacherFormData) => {
     try {
       if (mode === 'create') {
-        // First create user profile
-        const profileData = await authApi.signUp(data.email, 'teacher123', {
-          name: data.name,
-          role: 'teacher',
-          phone: data.phone,
+        // Create teacher record with demo profile
+        const teacherData: TeacherInsert = {
+          profile_id: `profile-${Date.now()}`,
+          subject_id: data.subject,
+          experience_years: parseInt(data.experience),
+          qualification: data.qualification,
+          join_date: new Date().toISOString().split('T')[0],
+        };
+
+        await teachersApi.create(teacherData);
+        toast({
+          title: "Success",
+          description: "Teacher created successfully",
         });
-
-        if (profileData.user) {
-          // Then create teacher record
-          const teacherData: TeacherInsert = {
-            profile_id: profileData.user.id,
-            subject_id: data.subject,
-            experience_years: parseInt(data.experience),
-            qualification: data.qualification,
-            join_date: new Date().toISOString().split('T')[0],
-          };
-
-          await teachersApi.create(teacherData);
-          toast({
-            title: "Success",
-            description: "Teacher created successfully",
-          });
-        }
       } else if (teacher) {
         // Update teacher record
         const teacherData: TeacherUpdate = {
@@ -97,12 +88,6 @@ const TeacherModal = memo(function TeacherModal({
         };
 
         await teachersApi.update(teacher.id, teacherData);
-        
-        // Update profile
-        await authApi.updateProfile(teacher.profile_id, {
-          name: data.name,
-          phone: data.phone,
-        });
 
         toast({
           title: "Success",

@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
+import { mockData, mockApiDelay } from './mock-data';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type Subject = Database['public']['Tables']['subjects']['Row'];
 export type SubjectInsert = Database['public']['Tables']['subjects']['Insert'];
@@ -8,6 +10,11 @@ export type SubjectUpdate = Database['public']['Tables']['subjects']['Update'];
 export const subjectsApi = {
   // Get all subjects
   async getAll() {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.subjects;
+    }
+
     const { data, error } = await supabase
       .from('subjects')
       .select(`
@@ -31,6 +38,11 @@ export const subjectsApi = {
 
   // Get subject by ID
   async getById(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.subjects.find(s => s.id === id) || null;
+    }
+
     const { data, error } = await supabase
       .from('subjects')
       .select(`
@@ -57,6 +69,20 @@ export const subjectsApi = {
 
   // Create new subject
   async create(subject: SubjectInsert) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const newSubject = {
+        ...subject,
+        id: `subject-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        teachers: [],
+        classes: []
+      };
+      mockData.subjects.push(newSubject as any);
+      return newSubject;
+    }
+
     const { data, error } = await supabase
       .from('subjects')
       .insert(subject)
@@ -69,6 +95,16 @@ export const subjectsApi = {
 
   // Update subject
   async update(id: string, updates: SubjectUpdate) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.subjects.findIndex(s => s.id === id);
+      if (index !== -1) {
+        mockData.subjects[index] = { ...mockData.subjects[index], ...updates };
+        return mockData.subjects[index];
+      }
+      throw new Error('Subject not found');
+    }
+
     const { data, error } = await supabase
       .from('subjects')
       .update(updates)
@@ -82,6 +118,15 @@ export const subjectsApi = {
 
   // Delete subject
   async delete(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.subjects.findIndex(s => s.id === id);
+      if (index !== -1) {
+        mockData.subjects.splice(index, 1);
+      }
+      return;
+    }
+
     const { error } = await supabase
       .from('subjects')
       .delete()

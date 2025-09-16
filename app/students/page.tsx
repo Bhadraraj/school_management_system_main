@@ -48,9 +48,13 @@ const StudentsPage = memo(function StudentsPage() {
         setStudents(studentsData);
         setClasses(classesData);
 
-        // Check subscription limits
-        const limits = await checkSubscriptionLimits('school1-1111-1111-1111-111111111111', 'students');
-        setSubscriptionLimits(limits);
+        // Mock subscription limits for demo
+        setSubscriptionLimits({
+          current: studentsData.length,
+          limit: 100,
+          canAdd: studentsData.length < 100,
+          remaining: 100 - studentsData.length,
+        });
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -168,16 +172,20 @@ const StudentsPage = memo(function StudentsPage() {
         <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
           {/* Header Section */}
           
-          <SubscriptionLimitWarning 
-            schoolId="school1-1111-1111-1111-111111111111"
-            resource="students"
-          />
-
           <Card className="w-full">
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-4 sm:pb-6">
+              <div className="flex items-center justify-between w-full">
               <CardTitle className="text-lg sm:text-xl font-semibold">
                 All Students
               </CardTitle>
+              <Button
+                onClick={handleCreate}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Plus className="w-3 h-3 sm:mr-1" />
+                <span className="hidden sm:inline">Add Student</span>
+              </Button>
+              </div>
               <div className="w-full sm:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />

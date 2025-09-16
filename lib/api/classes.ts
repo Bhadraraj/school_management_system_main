@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
+import { mockData, mockApiDelay } from './mock-data';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type Class = Database['public']['Tables']['classes']['Row'];
 export type ClassInsert = Database['public']['Tables']['classes']['Insert'];
@@ -8,6 +10,11 @@ export type ClassUpdate = Database['public']['Tables']['classes']['Update'];
 export const classesApi = {
   // Get all classes with related data
   async getAll() {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.classes;
+    }
+
     const { data, error } = await supabase
       .from('classes')
       .select(`
@@ -35,6 +42,11 @@ export const classesApi = {
 
   // Get class by ID
   async getById(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.classes.find(c => c.id === id) || null;
+    }
+
     const { data, error } = await supabase
       .from('classes')
       .select(`
@@ -68,6 +80,21 @@ export const classesApi = {
 
   // Create new class
   async create(classData: ClassInsert) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const newClass = {
+        ...classData,
+        id: `class-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        teachers: { id: classData.teacher_id, profiles: { name: 'Demo Teacher' } },
+        subjects: { id: classData.subject_id, name: 'Demo Subject', code: 'DEMO101' },
+        students: []
+      };
+      mockData.classes.push(newClass as any);
+      return newClass;
+    }
+
     const { data, error } = await supabase
       .from('classes')
       .insert(classData)
@@ -80,6 +107,16 @@ export const classesApi = {
 
   // Update class
   async update(id: string, updates: ClassUpdate) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.classes.findIndex(c => c.id === id);
+      if (index !== -1) {
+        mockData.classes[index] = { ...mockData.classes[index], ...updates };
+        return mockData.classes[index];
+      }
+      throw new Error('Class not found');
+    }
+
     const { data, error } = await supabase
       .from('classes')
       .update(updates)
@@ -93,6 +130,15 @@ export const classesApi = {
 
   // Delete class
   async delete(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.classes.findIndex(c => c.id === id);
+      if (index !== -1) {
+        mockData.classes.splice(index, 1);
+      }
+      return;
+    }
+
     const { error } = await supabase
       .from('classes')
       .delete()

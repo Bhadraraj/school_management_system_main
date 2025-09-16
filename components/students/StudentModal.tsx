@@ -87,13 +87,13 @@ const StudentModal = memo(function StudentModal({
         };
 
         if (mode === 'create') {
-          await studentsApi.create(studentData as StudentInsert);
+          studentsApi.create(studentData as StudentInsert);
           toast({
             title: "Success",
             description: "Student created successfully",
           });
         } else if (student) {
-          await studentsApi.update(student.id, studentData as StudentUpdate);
+          studentsApi.update(student.id, studentData as StudentUpdate);
           toast({
             title: "Success",
             description: "Student updated successfully",

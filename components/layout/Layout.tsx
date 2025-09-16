@@ -5,7 +5,6 @@ import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -56,7 +55,6 @@ const Layout = memo(function Layout({ children, allowedRoles }: LayoutProps) {
   };
 
   return (
-    <ProtectedRoute allowedRoles={allowedRoles}>
       <div className="min-h-screen bg-background">
         {/* Sidebar */}
         <Sidebar />
@@ -78,7 +76,6 @@ const Layout = memo(function Layout({ children, allowedRoles }: LayoutProps) {
           </main>
         </div>
       </div>
-    </ProtectedRoute>
   );
 });
 

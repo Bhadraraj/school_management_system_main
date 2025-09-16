@@ -4,12 +4,18 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export function useSupabaseAuth() {
   const { login, logout, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    // Skip Supabase auth if not configured (demo mode)
+    if (!isSupabaseConfigured()) {
+      return;
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();

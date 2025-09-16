@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/types/database';
+import { mockData, mockApiDelay } from './mock-data';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type Student = Database['public']['Tables']['students']['Row'];
 export type StudentInsert = Database['public']['Tables']['students']['Insert'];
@@ -8,6 +10,12 @@ export type StudentUpdate = Database['public']['Tables']['students']['Update'];
 export const studentsApi = {
   // Get all students with related data
   async getAll() {
+    // Use mock data if Supabase is not configured
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.students;
+    }
+
     const { data, error } = await supabase
       .from('students')
       .select(`
@@ -31,6 +39,11 @@ export const studentsApi = {
 
   // Get student by ID
   async getById(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.students.find(s => s.id === id) || null;
+    }
+
     const { data, error } = await supabase
       .from('students')
       .select(`
@@ -62,6 +75,20 @@ export const studentsApi = {
 
   // Create new student
   async create(student: StudentInsert) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const newStudent = {
+        ...student,
+        id: `student-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        classes: { id: student.class_id, name: 'Demo Class' },
+        profiles: { id: student.parent_id, name: 'Demo Parent', phone: '+1 234 567 8900' }
+      };
+      mockData.students.push(newStudent as any);
+      return newStudent;
+    }
+
     const { data, error } = await supabase
       .from('students')
       .insert(student)
@@ -74,6 +101,16 @@ export const studentsApi = {
 
   // Update student
   async update(id: string, updates: StudentUpdate) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.students.findIndex(s => s.id === id);
+      if (index !== -1) {
+        mockData.students[index] = { ...mockData.students[index], ...updates };
+        return mockData.students[index];
+      }
+      throw new Error('Student not found');
+    }
+
     const { data, error } = await supabase
       .from('students')
       .update(updates)
@@ -87,6 +124,15 @@ export const studentsApi = {
 
   // Delete student
   async delete(id: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      const index = mockData.students.findIndex(s => s.id === id);
+      if (index !== -1) {
+        mockData.students.splice(index, 1);
+      }
+      return;
+    }
+
     const { error } = await supabase
       .from('students')
       .delete()
@@ -97,6 +143,11 @@ export const studentsApi = {
 
   // Get students by class
   async getByClass(classId: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.students.filter(s => s.class_id === classId);
+    }
+
     const { data, error } = await supabase
       .from('students')
       .select('*')
@@ -109,6 +160,11 @@ export const studentsApi = {
 
   // Get students by parent
   async getByParent(parentId: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.students.filter(s => s.parent_id === parentId);
+    }
+
     const { data, error } = await supabase
       .from('students')
       .select(`
@@ -127,6 +183,15 @@ export const studentsApi = {
 
   // Search students
   async search(query: string) {
+    if (!isSupabaseConfigured()) {
+      await mockApiDelay();
+      return mockData.students.filter(s => 
+        s.name.toLowerCase().includes(query.toLowerCase()) ||
+        s.email.toLowerCase().includes(query.toLowerCase()) ||
+        s.roll_number.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
     const { data, error } = await supabase
       .from('students')
       .select(`

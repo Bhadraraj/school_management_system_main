@@ -151,11 +151,11 @@ export default function ClassPage() {
               </Breadcrumb>
             </div>
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleCreate}
               className="bg-purple-600 hover:bg-purple-700"
             >
               <Plus className="w-3 h-3 sm:mr-1" />
-              <span className="hidden sm:inline">Add </span>
+              <span className="hidden sm:inline">Add Class</span>
             </Button>
           </div>
 
