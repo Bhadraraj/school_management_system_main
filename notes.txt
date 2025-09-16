@@ -1,0 +1,5 @@
+Demo Login Credentials:
+
+Admin: admin@school.edu / admin123
+Teacher: teacher@school.edu / teacher123
+Parent: parent@school.edu / parent123
