@@ -209,12 +209,12 @@ export default function HostelPage() {
         </div>
       </Layout>
       
-      <HostelModal
+      {/* <TransportModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         hostel={selectedHostel}
-      />
+      /> */}
     </>
   );
 }

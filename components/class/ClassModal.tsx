@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { classesApi, type ClassInsert, type ClassUpdate } from '@/lib/api/classes';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,77 +27,24 @@ interface ClassModalProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   classData?: any;
-  teachers?: any[];
-  subjects?: any[];
-  onSaved?: () => void;
 }
 
-export default function ClassModal({ 
-  open, 
-  onOpenChange, 
-  mode, 
-  classData, 
-  teachers = [],
-  subjects = [],
-  onSaved 
-}: ClassModalProps) {
-  const { toast } = useToast();
-  
+export default function ClassModal({ open, onOpenChange, mode, classData }: ClassModalProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<ClassFormData>({
     resolver: zodResolver(classSchema),
-    defaultValues: classData ? {
-      name: classData.name,
-      teacher: classData.teacher_id,
-      subject: classData.subject_id,
-      room: classData.room,
-      schedule: classData.schedule,
-      capacity: classData.capacity?.toString(),
-    } : {},
+    defaultValues: classData || {},
   });
 
-  const onSubmit = useCallback(async (data: ClassFormData) => {
-    try {
-      const classDataToSave = {
-        name: data.name,
-        teacher_id: data.teacher,
-        subject_id: data.subject,
-        room: data.room,
-        schedule: data.schedule,
-        capacity: parseInt(data.capacity),
-      };
-
-      if (mode === 'create') {
-        await classesApi.create(classDataToSave as ClassInsert);
-        toast({
-          title: "Success",
-          description: "Class created successfully",
-        });
-      } else if (classData) {
-        await classesApi.update(classData.id, classDataToSave as ClassUpdate);
-        toast({
-          title: "Success",
-          description: "Class updated successfully",
-        });
-      }
-
-      reset();
-      onOpenChange(false);
-      onSaved?.();
-    } catch (error) {
-      console.error('Error saving class:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save class",
-        variant: "destructive",
-      });
-    }
-  }, [mode, classData, reset, onOpenChange, onSaved, toast]);
+  const onSubmit = (data: ClassFormData) => {
+    console.log('Class form submitted:', data);
+    reset();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,46 +92,33 @@ export default function ClassModal({
 
           <div className="space-y-2">
             <Label htmlFor="teacher">Assign Teacher</Label>
-            <Select 
-              value={classData?.teacher_id}
-              onValueChange={(value) => setValue('teacher', value)}
-            >
+            <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select teacher" />
               </SelectTrigger>
               <SelectContent>
-                {teachers.map((teacher) => (
-                  <SelectItem key={teacher.id} value={teacher.id}>
-                    {teacher.profiles?.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="dr-sarah-wilson">Dr. Sarah Wilson</SelectItem>
+                <SelectItem value="mr-john-davis">Mr. John Davis</SelectItem>
+                <SelectItem value="ms-emily-chen">Ms. Emily Chen</SelectItem>
+                <SelectItem value="dr-michael-brown">Dr. Michael Brown</SelectItem>
               </SelectContent>
             </Select>
-            {errors.teacher && (
-              <p className="text-sm text-red-600">{errors.teacher.message}</p>
-            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
-            <Select 
-              value={classData?.subject_id}
-              onValueChange={(value) => setValue('subject', value)}
-            >
+            <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>
               <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="mathematics">Mathematics</SelectItem>
+                <SelectItem value="physics">Physics</SelectItem>
+                <SelectItem value="chemistry">Chemistry</SelectItem>
+                <SelectItem value="biology">Biology</SelectItem>
+                <SelectItem value="english">English</SelectItem>
               </SelectContent>
             </Select>
-            {errors.subject && (
-              <p className="text-sm text-red-600">{errors.subject.message}</p>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

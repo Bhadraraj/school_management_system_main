@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { subjectsApi, type SubjectInsert, type SubjectUpdate } from '@/lib/api/subjects';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,72 +26,24 @@ interface SubjectModalProps {
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   subject?: any;
-  teachers?: any[];
-  onSaved?: () => void;
 }
 
-export default function SubjectModal({ 
-  open, 
-  onOpenChange, 
-  mode, 
-  subject, 
-  teachers = [],
-  onSaved 
-}: SubjectModalProps) {
-  const { toast } = useToast();
-  
+export default function SubjectModal({ open, onOpenChange, mode, subject }: SubjectModalProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<SubjectFormData>({
     resolver: zodResolver(subjectSchema),
-    defaultValues: subject ? {
-      name: subject.name,
-      code: subject.code,
-      teacher: subject.teachers?.[0]?.id,
-      credits: subject.credits?.toString(),
-      description: subject.description,
-    } : {},
+    defaultValues: subject || {},
   });
 
-  const onSubmit = useCallback(async (data: SubjectFormData) => {
-    try {
-      const subjectData = {
-        name: data.name,
-        code: data.code,
-        credits: parseInt(data.credits),
-        description: data.description,
-      };
-
-      if (mode === 'create') {
-        await subjectsApi.create(subjectData as SubjectInsert);
-        toast({
-          title: "Success",
-          description: "Subject created successfully",
-        });
-      } else if (subject) {
-        await subjectsApi.update(subject.id, subjectData as SubjectUpdate);
-        toast({
-          title: "Success",
-          description: "Subject updated successfully",
-        });
-      }
-
-      reset();
-      onOpenChange(false);
-      onSaved?.();
-    } catch (error) {
-      console.error('Error saving subject:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save subject",
-        variant: "destructive",
-      });
-    }
-  }, [mode, subject, reset, onOpenChange, onSaved, toast]);
+  const onSubmit = (data: SubjectFormData) => {
+    console.log('Subject form submitted:', data);
+    reset();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,26 +91,22 @@ export default function SubjectModal({
 
           <div className="space-y-2">
             <Label htmlFor="teacher">Assign Teacher</Label>
-            <Select 
-              value={subject?.teachers?.[0]?.id}
-              onValueChange={(value) => setValue('teacher', value)}
-            >
+            <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select teacher" />
               </SelectTrigger>
               <SelectContent>
-                {teachers.map((teacher) => (
-                  <SelectItem key={teacher.id} value={teacher.id}>
-                    {teacher.profiles?.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="dr-sarah-wilson">Dr. Sarah Wilson</SelectItem>
+                <SelectItem value="mr-john-davis">Mr. John Davis</SelectItem>
+                <SelectItem value="ms-emily-chen">Ms. Emily Chen</SelectItem>
+                <SelectItem value="dr-michael-brown">Dr. Michael Brown</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="credits">Credits</Label>
-            <Select onValueChange={(value) => setValue('credits', value)}>
+            <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Select credits" />
               </SelectTrigger>

@@ -35,7 +35,6 @@ export default function LibraryModal({ open, onOpenChange, mode, book }: Library
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<BookFormData>({
     resolver: zodResolver(bookSchema),
     defaultValues: book || {},
@@ -94,7 +93,7 @@ export default function LibraryModal({ open, onOpenChange, mode, book }: Library
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="subject">Subject</Label>
-              <Select onValueChange={(value) => setValue('subject', value)}>
+              <Select>
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>

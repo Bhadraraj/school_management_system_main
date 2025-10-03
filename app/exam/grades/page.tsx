@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
-import ExamGradesModal from "@/components/exam/ExamGradesModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,27 +86,6 @@ const gradesData = [
 
 export default function ExamGradesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [selectedGrade, setSelectedGrade] = useState(null);
-
-  const handleCreate = () => {
-    setModalMode("create");
-    setSelectedGrade(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (grade: any) => {
-    setModalMode("edit");
-    setSelectedGrade(grade);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (grade: any) => {
-    if (confirm("Are you sure you want to delete this grade?")) {
-      console.log("Delete grade:", grade);
-    }
-  };
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
@@ -125,8 +103,7 @@ export default function ExamGradesPage() {
   };
 
   return (
-    <>
-      <Layout allowedRoles={["admin", "teacher", "parent"]}>
+    <Layout allowedRoles={["admin", "teacher", "parent"]}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -145,10 +122,7 @@ export default function ExamGradesPage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <Button 
-            onClick={handleCreate}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
+          <Button className="bg-purple-600 hover:bg-purple-700">
             <Plus className="w-3 h-3 sm:mr-1" />
             <span className="hidden sm:inline">Add </span>
           </Button>
@@ -252,18 +226,10 @@ export default function ExamGradesPage() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleEdit(grade)}
-                          >
+                          <Button variant="ghost" size="sm">
                             <Edit className="w-4 h-4 text-gray-400" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDelete(grade)}
-                          >
+                          <Button variant="ghost" size="sm">
                             <Trash2 className="w-4 h-4 text-gray-400" />
                           </Button>
                         </div>
@@ -277,13 +243,5 @@ export default function ExamGradesPage() {
         </Card>
       </div>
     </Layout>
-
-    <ExamGradesModal
-      open={isModalOpen}
-      onOpenChange={setIsModalOpen}
-      mode={modalMode}
-      grade={selectedGrade}
-    />
-  </>
   );
 }

@@ -103,9 +103,13 @@ const Header = memo(function Header() {
           </Button>
           
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="relative text-foreground hover:bg-accent p-2"
+          >
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full"></span>
           </Button>
           
           {/* Messages - Hide on small screens */}
@@ -124,12 +128,12 @@ const Header = memo(function Header() {
                 <Avatar className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0">
                   <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback className="text-xs sm:text-sm">
-                    {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                    {user?.name?.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left hidden sm:block min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
-                  <p className="text-xs text-muted-foreground capitalize truncate">{user?.role || 'admin'}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize truncate">{user?.role}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

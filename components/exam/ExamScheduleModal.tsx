@@ -43,7 +43,6 @@ export default function ExamScheduleModal({ open, onOpenChange }: ExamScheduleMo
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<ExamFormData>({
     resolver: zodResolver(examSchema),
   });
@@ -85,7 +84,7 @@ export default function ExamScheduleModal({ open, onOpenChange }: ExamScheduleMo
 
           <div className="space-y-2">
             <Label htmlFor="subjectType">Subject Type</Label>
-            <Select onValueChange={(value) => setValue('subjectType', value)}>
+            <Select>
               <SelectTrigger>
                 <SelectValue placeholder="Please Select" />
               </SelectTrigger>
@@ -101,13 +100,7 @@ export default function ExamScheduleModal({ open, onOpenChange }: ExamScheduleMo
 
           <div className="space-y-2">
             <Label htmlFor="class">Select Class</Label>
-            <Select 
-              value={selectedClass} 
-              onValueChange={(value) => {
-                setSelectedClass(value);
-                setValue('class', value);
-              }}
-            >
+            <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger>
                 <SelectValue placeholder="Please Select" />
               </SelectTrigger>

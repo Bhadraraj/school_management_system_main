@@ -37,7 +37,7 @@ const ExamResultsNotifications = memo(function ExamResultsNotifications() {
   return (
     <Card className="w-full lg:w-80">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold">All Exam Results</CardTitle>
+        <CardTitle className="text-lg font-semibold">Latest Updates</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

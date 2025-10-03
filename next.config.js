@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  distDir: 'out',
+  
+  // GitHub Pages configuration
+  basePath: process.env.NODE_ENV === 'production' ? '/school-management' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/school-management' : '',
+  
   images: { 
     unoptimized: true 
   },
@@ -19,4 +27,4 @@ const nextConfig = {
   swcMinify: true,
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig;    

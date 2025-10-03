@@ -3,7 +3,6 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
-import { authApi } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,7 @@ const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["admin", "teacher", "parent"], {
-    required_error: "Please select a role",
+    message: "Please select a role"
   }),
 });
 
@@ -95,9 +94,8 @@ export default function LoginPage() {
 
       startTransition(async () => {
         try {
-          // Fallback to mock authentication for demo
           const mockUser = mockUsers[data.role];
-          
+
           if (
             data.email === mockUser.email &&
             data.password === mockUser.password
@@ -119,7 +117,7 @@ export default function LoginPage() {
         }
       });
     },
-    [login, router]
+    [login, router, setValue]
   );
 
   const handleDemoLogin = useCallback(

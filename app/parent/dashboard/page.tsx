@@ -36,15 +36,40 @@ export default function ParentDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Auto-redirect logic can be added here if needed
-  }, []);
+    if (!isAuthenticated || !user) {
+      router.replace('/login');
+      return;
+    }
+    
+    if (user.role !== 'parent') {
+      router.replace('/unauthorized');
+      return;
+    }
+  }, [isAuthenticated, user, router]);
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="w-8 h-8 text-primary-foreground animate-pulse" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== 'parent') {
+    return null;
+  }
 
   return (
     <Layout allowedRoles={['parent']}>
       <div className="space-y-6">
         <div>
           <h1 className="text-lg font-bold text-foreground mb-2">Parent Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name || 'Parent'}! Monitor your child's academic progress and school activities.</p>
+          <p className="text-muted-foreground">Welcome back, {user.name}! Monitor your child's academic progress and school activities.</p>
         </div>
 
         {/* Child Profile Card */}
