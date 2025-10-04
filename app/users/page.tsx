@@ -37,7 +37,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from '@/components/ui/breadcrumb';
-import { Plus, Search, MoreVertical, Edit, Trash2, Lock, Unlock, Shield } from 'lucide-react';
+import { Plus, Search, MoveVertical as MoreVertical, CreditCard as Edit, Trash2, Lock, Clock as Unlock, Shield } from 'lucide-react';
 import UserModal from '@/components/users/UserModal';
 import PermissionModal from '@/components/users/PermissionModal';
 import {

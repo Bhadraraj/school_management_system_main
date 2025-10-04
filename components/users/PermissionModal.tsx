@@ -8,24 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Shield,
-  Eye,
-  Edit,
-  Plus,
-  Trash2,
-  Users,
-  BookOpen,
-  Calendar,
-  DollarSign,
-  Home,
-  Bus,
-  Bell,
-  Settings,
-  FileText,
-  GraduationCap,
-  CheckCircle2,
-} from 'lucide-react';
+import { Shield, Eye, CreditCard as Edit, Plus, Trash2, Users, BookOpen, Calendar, DollarSign, Chrome as Home, Bus, Bell, Settings, FileText, GraduationCap, CircleCheck as CheckCircle2 } from 'lucide-react';
 
 interface Permission {
   module: string;

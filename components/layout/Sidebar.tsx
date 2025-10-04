@@ -5,23 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import {
-  Home,
-  Users,
-  GraduationCap,
-  BookOpen,
-  CreditCard,
-  Calendar,
-  FileText,
-  ClipboardList,
-  Bus,
-  Building2,
-  ChevronDown,
-  ChevronRight,
-  Settings,
-  X,
-  UserCog,
-} from 'lucide-react';
+import { Chrome as Home, Users, GraduationCap, BookOpen, CreditCard, Calendar, FileText, ClipboardList, Bus, Building2, ChevronDown, ChevronRight, Settings, X, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
