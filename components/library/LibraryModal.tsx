@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-
-const bookSchema = z.object({
-  name: z.string().min(1, 'Book name is required'),
-  writer: z.string().min(1, 'Writer is required'),
-  subject: z.string().min(1, 'Subject is required'),
-  class: z.string().min(1, 'Class is required'),
-  isbn: z.string().min(1, 'ISBN is required'),
-  publishDate: z.string().min(1, 'Publish date is required'),
-});
-
-type BookFormData = z.infer<typeof bookSchema>;
+import { X, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface LibraryModalProps {
   open: boolean;
@@ -30,25 +16,60 @@ interface LibraryModalProps {
 }
 
 export default function LibraryModal({ open, onOpenChange, mode, book }: LibraryModalProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<BookFormData>({
-    resolver: zodResolver(bookSchema),
-    defaultValues: book || {},
+  const [formData, setFormData] = useState({
+    barcode: book?.barcode || '',
+    title: book?.title || '',
+    author: book?.author || '',
+    isbn: book?.isbn || '',
+    publisher: book?.publisher || '',
+    category: book?.category || '',
+    rackLocation: book?.rackLocation || '',
+    totalCopies: book?.totalCopies || '',
+    publishDate: book?.publishDate || '',
+    cover: book?.cover || '',
   });
 
-  const onSubmit = (data: BookFormData) => {
-    console.log('Book form submitted:', data);
-    reset();
+  const [coverPreview, setCoverPreview] = useState(book?.cover || '');
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCoverPreview(result);
+        setFormData((prev) => ({ ...prev, cover: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Book form submitted:', formData);
     onOpenChange(false);
   };
 
+  const categories = [
+    'Computer Science',
+    'Programming',
+    'Literature',
+    'Physics',
+    'Mathematics',
+    'Chemistry',
+    'Biology',
+    'History',
+    'Geography',
+    'English',
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-lg font-semibold">
             {mode === 'create' ? 'Add New Book' : 'Edit Book'}
@@ -62,104 +83,170 @@ export default function LibraryModal({ open, onOpenChange, mode, book }: Library
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Book Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter book name"
-                {...register('name')}
-              />
-              {errors.name && (
-                <p className="text-sm text-red-600">{errors.name.message}</p>
-              )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex gap-6">
+              <div className="flex-shrink-0">
+                <Label>Book Cover</Label>
+                <div className="mt-2">
+                  {coverPreview ? (
+                    <div className="relative w-32 h-48 rounded-lg overflow-hidden border-2 border-border">
+                      <img
+                        src={coverPreview}
+                        alt="Book cover"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-1 right-1 h-6 w-6 p-0"
+                        onClick={() => {
+                          setCoverPreview('');
+                          setFormData((prev) => ({ ...prev, cover: '' }));
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-32 h-48 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent transition-colors">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                      <span className="text-xs text-muted-foreground">Upload Cover</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="barcode">Barcode ID *</Label>
+                    <Input
+                      id="barcode"
+                      placeholder="e.g., BK001"
+                      value={formData.barcode}
+                      onChange={(e) => handleChange('barcode', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="isbn">ISBN *</Label>
+                    <Input
+                      id="isbn"
+                      placeholder="978-0000000000"
+                      value={formData.isbn}
+                      onChange={(e) => handleChange('isbn', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="title">Book Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter book title"
+                    value={formData.title}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="author">Author *</Label>
+                  <Input
+                    id="author"
+                    placeholder="Enter author name"
+                    value={formData.author}
+                    onChange={(e) => handleChange('author', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="writer">Writer</Label>
-              <Input
-                id="writer"
-                placeholder="Enter writer name"
-                {...register('writer')}
-              />
-              {errors.writer && (
-                <p className="text-sm text-red-600">{errors.writer.message}</p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="publisher">Publisher *</Label>
+                <Input
+                  id="publisher"
+                  placeholder="Enter publisher name"
+                  value={formData.publisher}
+                  onChange={(e) => handleChange('publisher', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category/Subject *</Label>
+                <Select value={formData.category} onValueChange={(value) => handleChange('category', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rackLocation">Rack/Shelf Location *</Label>
+                <Input
+                  id="rackLocation"
+                  placeholder="e.g., A-12"
+                  value={formData.rackLocation}
+                  onChange={(e) => handleChange('rackLocation', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalCopies">Total Copies *</Label>
+                <Input
+                  id="totalCopies"
+                  type="number"
+                  min="1"
+                  placeholder="0"
+                  value={formData.totalCopies}
+                  onChange={(e) => handleChange('totalCopies', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="publishDate">Publish Date *</Label>
+                <Input
+                  id="publishDate"
+                  type="date"
+                  value={formData.publishDate}
+                  onChange={(e) => handleChange('publishDate', e.target.value)}
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mathematics">Mathematics</SelectItem>
-                  <SelectItem value="physics">Physics</SelectItem>
-                  <SelectItem value="chemistry">Chemistry</SelectItem>
-                  <SelectItem value="biology">Biology</SelectItem>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="literature">Literature</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="class">Class</Label>
-              <Input
-                id="class"
-                placeholder="e.g., 01, 02"
-                {...register('class')}
-              />
-              {errors.class && (
-                <p className="text-sm text-red-600">{errors.class.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="isbn">ISBN</Label>
-              <Input
-                id="isbn"
-                placeholder="Enter ISBN"
-                {...register('isbn')}
-              />
-              {errors.isbn && (
-                <p className="text-sm text-red-600">{errors.isbn.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="publishDate">Publish Date</Label>
-              <Input
-                id="publishDate"
-                type="date"
-                {...register('publishDate')}
-              />
-              {errors.publishDate && (
-                <p className="text-sm text-red-600">{errors.publishDate.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {mode === 'create' ? 'Save' : 'Update'}
+            <Button type="submit">
+              {mode === 'create' ? 'Add Book' : 'Update Book'}
             </Button>
           </div>
         </form>

@@ -30,9 +30,9 @@ export default function LibraryPage() {
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <Button onClick={() => setIsModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="w-3 h-3 sm:mr-1" />
-              <span className="hidden sm:inline">Add Library </span>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Book
             </Button>
           </div>
 
