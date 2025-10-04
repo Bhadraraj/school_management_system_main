@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react';
 
 export interface LeaveRequest {
   id: string;

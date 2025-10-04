@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Users, CircleCheck as CheckCircle, Circle as XCircle, Clock } from 'lucide-react';
 
 interface Student {
   id: string;
