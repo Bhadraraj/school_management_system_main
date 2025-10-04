@@ -2,12 +2,12 @@
 
 import { useEffect, useState, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore, UserRole } from '@/lib/store';
 import { GraduationCap } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('admin' | 'teacher' | 'parent')[];
+  allowedRoles?: UserRole[];
 }
 
 const ProtectedRoute = memo(function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -16,7 +16,7 @@ const ProtectedRoute = memo(function ProtectedRoute({ children, allowedRoles }: 
 
   useEffect(() => {
     // Clear invalid user data immediately
-    const validRoles = ['admin', 'teacher', 'parent'];
+    const validRoles: UserRole[] = ['admin', 'teacher', 'parent', 'student', 'hostel_admin', 'librarian', 'accountant'];
     if (user && !validRoles.includes(user.role)) {
       useAuthStore.getState().logout();
       router.replace('/login');

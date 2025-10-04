@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,8 @@ const mockUsers = {
       role: "admin" as const,
       avatar:
         "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400",
+      isActive: true,
+      createdAt: "2024-01-15",
     },
   },
   teacher: {
@@ -53,6 +56,8 @@ const mockUsers = {
       role: "teacher" as const,
       avatar:
         "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
+      isActive: true,
+      createdAt: "2024-02-10",
     },
   },
   parent: {
@@ -65,6 +70,8 @@ const mockUsers = {
       role: "parent" as const,
       avatar:
         "https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=400",
+      isActive: true,
+      createdAt: "2024-02-15",
     },
   },
 };
@@ -256,15 +263,15 @@ export default function LoginPage() {
                 >
                   Login as Teacher
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-10 text-sm"
-                  onClick={() => handleDemoLogin("parent")}
-                >
-                  Login as Parent
-                </Button>
               </div>
+            </div>
+
+            {/* Parent Login Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 mb-3">Are you a parent?</p>
+              <Link href="/login/parent" className="text-sm text-primary font-medium hover:underline">
+                Login with Student Roll Number & OTP
+              </Link>
             </div>
           </CardContent>
         </Card>

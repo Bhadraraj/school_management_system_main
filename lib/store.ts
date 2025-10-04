@@ -5,15 +5,28 @@ import { persist } from 'zustand/middleware';
 import { subscribeWithSelector } from 'zustand/middleware';
 
 export type Theme = 'default' | 'ocean' | 'forest' | 'sunset' | 'royal';
-export type UserRole = 'admin' | 'teacher' | 'parent';
+export type UserRole = 'admin' | 'teacher' | 'parent' | 'student' | 'hostel_admin' | 'librarian' | 'accountant';
 export type ScreenSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
+interface Permission {
+  module: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
 
 interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
   avatar?: string;
+  permissions?: Permission[];
+  isActive: boolean;
+  createdAt: string;
+  createdBy?: string;
 }
 
 interface ThemeState {

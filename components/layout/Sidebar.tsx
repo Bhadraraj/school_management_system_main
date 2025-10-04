@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Settings,
   X,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -43,15 +44,21 @@ const menuItems = [
       { label: 'Student Details', href: '/students/details' },
     ]
   },
-  { 
-    icon: GraduationCap, 
-    label: 'Teachers', 
-    href: '/teachers', 
+  {
+    icon: GraduationCap,
+    label: 'Teachers',
+    href: '/teachers',
     roles: ['admin'],
     subItems: [
       { label: 'All Teachers', href: '/teachers' },
       { label: 'Teacher Details', href: '/teachers/details' },
     ]
+  },
+  {
+    icon: UserCog,
+    label: 'User Management',
+    href: '/users',
+    roles: ['admin']
   },
   { icon: BookOpen, label: 'Library', href: '/library', roles: ['admin', 'teacher'] },
   { 
