@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, AlertCircle } from 'lucide-react';
+import { FileText, CircleAlert as AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface Assignment {
